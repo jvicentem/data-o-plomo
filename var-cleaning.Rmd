@@ -1,6 +1,6 @@
 ---
 title: "DATATON URJC 2017"
-author: "Jose"
+author: "Data O Plomo"
 date: "3 April 2017"
 output: html_document
 ---
@@ -17,650 +17,671 @@ library(knitr)
 #Limpiamos los datos
 
 ```{r, echo=FALSE, include=FALSE,}
-df <- read.csv('./traindata.csv', na.strings = c("NaN")) 
+df.train <- read.csv('./traindata.csv', na.strings = c("NaN")) 
+df.test <- read.csv('./testdata.csv', na.strings = c("NaN"))
 
-ano <- as.factor(ifelse(df$Ano==1,"2005",
-                                 ifelse(df$Ano==2,"2006",
-                                        ifelse(df$Ano==3,"2007",
-                                               ifelse(df$Ano==4,"2008",
-                                                      ifelse(df$Ano==5,"2009", "2010"
-                                                      )
-                                               )
-                                        )
-                                 )
-                        )
-                )
-
-table(ano)
-
-ano <- relevel(ano, ref = "2007")
-df$Ano <- ano
-
-###################################################################################################################
-
-provincia <- as.factor(ifelse(df$Provincia==1, "Alicante", 
-                              ifelse(df$Provincia==2, "Castellon", "Valencia")))
-
-table(provincia)
-
-provincia <- relevel(provincia, ref = "Valencia")
-df$Provincia <- provincia
-
-###################################################################################################################
-
-dia_semana <- as.factor(ifelse(df$Dia_Semana==1, "Lunes", 
-                          ifelse(df$Dia_Semana==2, "Martes", 
-                                 ifelse(df$Dia_Semana==3, "Miercoles", 
-                                        ifelse(df$Dia_Semana==4, "Jueves", 
-                                               ifelse(df$Dia_Semana==5, "Viernes", 
-                                                      ifelse(df$Dia_Semana==6, "Sabado", 
-                                                             ifelse(df$Dia_Semana==7, "Domingo", NA)
-                                                             )
-                                                      )
-                                               )
-                                        )
-                                 )
-                          )
-                  )
-
-table(dia_semana)
-
-dia_semana <- relevel(dia_semana, ref = "Domingo")
-df$Dia_Semana <- dia_semana
-
-###################################################################################################################
-
-tipo_dia <- as.factor(ifelse(df$Tipo_Dia == 1, "Laborable", ifelse(df$Tipo_Dia == 2, "Vispera Festivo", ifelse(df$Tipo_Dia == 3, "Festivo", ifelse(df$Tipo_Dia == 4, "Puente", NA)))))
-
-table(tipo_dia)
-
-tipo_dia <- relevel(tipo_dia, ref = "Laborable")
-df$Tipo_Dia <- tipo_dia
-
-###################################################################################################################
-
-aceras <- as.factor(ifelse(df$Aceras == 1, "Si", ifelse(df$Aceras == 2,"No", NA)))
-
-table(aceras)
-
-aceras <- relevel(aceras, ref = "Si")
-df$Aceras <- aceras
-
-###################################################################################################################
-
-alcohol_drogas <- as.factor(ifelse(df$Alcohol_Drogas == 1, "Si", ifelse(df$Alcohol_Drogas == 2,"No", NA)))
-
-table(alcohol_drogas)
-
-alcohol_drogas <- relevel(alcohol_drogas, ref = "Si")
-df$Alcohol_Drogas <- alcohol_drogas
-
-###################################################################################################################
-
-anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada==1, "mayor_6", 
-                              ifelse(df$Anchura_Calzada==2, "entre_6_y_7", ifelse(df$Anchura_Calzada==3, "mayor_7", NA))))
-
-table(anchura_calzada)
-
-anchura_calzada <- relevel(anchura_calzada, ref = "mayor_7")
-df$Anchura_Calzada <- anchura_calzada
-
-###################################################################################################################
-
-anchura_carril <- as.factor(ifelse(df$Anchura_Carril==1, "mayor_3.75", 
-                                    ifelse(df$Anchura_Carril==2, "entre_3.25_y_3.75", ifelse(df$Anchura_Carril==3, "menor_3.25", NA))))
-
-table(anchura_carril)
-
-anchura_carril <- relevel(anchura_carril, ref = "entre_3.25_y_3.75")
-df$Anchura_Carril <- anchura_carril
-
-###################################################################################################################
-
-arcen <- as.factor(ifelse(df$Arcen==1, "Inexistente", 
-                                   ifelse(df$Arcen==2, "menor_1.5", 
-                                          ifelse(df$Arcen==3, "entre_1.5_y_2.5", 
-                                                 ifelse(df$Arcen==4, "mayor_2.5", 
-                                                        ifelse(df$Arcen==5, "mayor_2.5", NA))
+clean_data <- function(df) {
+  ano <- as.factor(ifelse(df$Ano==1,"2005",
+                                   ifelse(df$Ano==2,"2006",
+                                          ifelse(df$Ano==3,"2007",
+                                                 ifelse(df$Ano==4,"2008",
+                                                        ifelse(df$Ano==5,"2009", "2010"
+                                                        )
                                                  )
                                           )
+                                   )
                           )
-                   )
-
-table(arcen)
-
-arcen <- relevel(arcen, ref = "entre_1.5_y_2.5")
-df$Arcen <- arcen
-
-###################################################################################################################
-
-arcen_pavimentado <- as.factor(ifelse(df$Arcen_Pavimentado == 1, "Si", ifelse(df$Arcen_Pavimentado == 2, "No", NA)))
-
-table(arcen_pavimentado)
-
-arcen_pavimentado <- relevel(arcen_pavimentado, ref = "No")
-df$Arcen_Pavimentado <- arcen_pavimentado
-
-###################################################################################################################
-
-averia_mecanica <- as.factor(ifelse(df$Averia_Mecanica == 1, "Si", ifelse(df$Averia_Mecanica == 2,"No", NA)))
-
-table(averia_mecanica)
-
-averia_mecanica <- relevel(averia_mecanica, ref = "Si")
-df$Averia_Mecanica <- averia_mecanica
-
-###################################################################################################################
-
-barrera_seguridad <- as.factor(ifelse(df$Barrera_Seguridad == 1, "Si", ifelse(df$Barrera_Seguridad == 2, "No", NA)))
-
-table(barrera_seguridad)
-
-barrera_seguridad <- relevel(barrera_seguridad, ref = "Si")
-df$Barrera_Seguridad <- barrera_seguridad
-
-###################################################################################################################
-
-cansancio_sueno <- as.factor(ifelse(df$Cansancio_Sueno == 1, "Si", ifelse(df$Cansancio_Sueno == 2, "No", NA)))
-
-table(cansancio_sueno)
-
-cansancio_sueno <- relevel(cansancio_sueno, ref = "Si")
-df$Cansancio_Sueno <- cansancio_sueno
-
-###################################################################################################################
-
-
-captafaros <- as.factor(ifelse(df$Captafaros == 1, "Si", ifelse(df$Captafaros == 2,"No", NA)))
-
-table(captafaros)
-
-captafaros <- relevel(captafaros, ref = "Si")
-df$Captafaros <- captafaros
-
-###################################################################################################################
-
-circulacion <- as.factor(ifelse(df$Circulacion==1, "Fluida", 
-                                    ifelse(df$Circulacion==2, "Densa", ifelse(df$Circulacion==3,"Congestionada", NA))))
-
-table(circulacion)
-
-circulacion <- relevel(circulacion, ref = "Fluida")
-df$Circulacion <- circulacion
-
-###################################################################################################################
-
-circulacion_medidas_especiales <- as.factor(ifelse(df$Circulacion_Medidas_Especiales == 1, "Carril reversible", 
-                                                   ifelse(df$Circulacion_Medidas_Especiales == 2, "Habilitacion arcen", 
-                                                          ifelse(df$Circulacion_Medidas_Especiales == 3, "Otra medida", 
-                                                                 ifelse(df$Circulacion_Medidas_Especiales == 4,"Ninguna medida", NA)))))
-
-table(circulacion_medidas_especiales)
-
-circulacion_medidas_especiales <- relevel(circulacion_medidas_especiales, ref = "Ninguna medida")
-df$Circulacion_Medidas_Especiales <- circulacion_medidas_especiales
-
-###################################################################################################################
-
-circular_sentido_contrario <- as.factor(ifelse(df$Circular_Sentido_Contrario == 1, "Si", ifelse(df$Circular_Sentido_Contrario == 2,"No", NA)))
-
-table(circular_sentido_contrario)
-
-circular_sentido_contrario <- relevel(circular_sentido_contrario, ref = "Si")
-df$Circular_Sentido_Contrario <- circular_sentido_contrario
-
-###################################################################################################################
-
-distraccion <- as.factor(ifelse(df$Distraccion == 1, "Si", ifelse(df$Distraccion == 2,"No", NA)))
-
-table(distraccion)
-
-distraccion <- relevel(distraccion, ref = "Si")
-df$Distraccion <- distraccion
-
-###################################################################################################################
-
-enfermedad <- as.factor(ifelse(df$Enfermedad == 1, "Si", ifelse(df$Enfermedad == 2, "No", NA)))
-
-table(enfermedad)
-
-enfermedad <- relevel(enfermedad, ref = "Si")
-df$Enfermedad <- enfermedad
-
-###################################################################################################################
-
-estado_condicion_senalizacion <- as.factor(ifelse(df$Estado_Condicion_Senalizacion == 1, "Si", ifelse(df$Estado_Condicion_Senalizacion == 2,"No", NA)))
-
-table(estado_condicion_senalizacion)
-
-estado_condicion_senalizacion <- relevel(estado_condicion_senalizacion, ref = "Si")
-df$Estado_Condicion_Senalizacion <- estado_condicion_senalizacion
-
-###################################################################################################################
-
-estado_condicion_via <- as.factor(ifelse(df$Estado_Condicion_Via == 1, "Si", ifelse(df$Estado_Condicion_Via == 2,"No", NA)))
-
-table(estado_condicion_via)
-
-estado_condicion_via <- relevel(estado_condicion_via, ref = "Si")
-df$Estado_Condicion_Via <- estado_condicion_via
-
-###################################################################################################################
-
-factores_atmosfericos <- as.factor(ifelse(df$Factores_Atmosfericos == 1, "Buen tiempo", 
-                                          ifelse(df$Factores_Atmosfericos == 2, "Niebla intensa",
-                                                 ifelse(df$Factores_Atmosfericos == 3, "Niebla ligera",
-                                                        ifelse(df$Factores_Atmosfericos == 4, "Lloviznando",
-                                                               ifelse(df$Factores_Atmosfericos == 5, "Lluvia fuerte",
-                                                                      ifelse(df$Factores_Atmosfericos == 6, "Granizando",
-                                                                             ifelse(df$Factores_Atmosfericos == 7, "Nevado",
-                                                                                    ifelse(df$Factores_Atmosfericos == 8, "Viento fuerte", 
-                                                                                           ifelse(df$Factores_Atmosfericos == 9, "Otro", NA))))))))))
-
-table(factores_atmosfericos)
-
-factores_atmosfericos <- relevel(factores_atmosfericos, ref = "Buen tiempo")
-df$Factores_Atmosfericos <- factores_atmosfericos
-
-###################################################################################################################
-
-fuera_o_interseccion <- as.factor(ifelse(df$Fuera_o_Interseccion == 1, "Recta", 
-                                         ifelse(df$Fuera_o_Interseccion == 2, "Curva suave",
-                                                ifelse(df$Fuera_o_Interseccion == 3, "Curva fuerte sin senal",
-                                                       ifelse(df$Fuera_o_Interseccion == 4, "Curva fuerte con senal y sin senal velocidad",
-                                                              ifelse(df$Fuera_o_Interseccion == 5, "Curva fuerte con senal y con senal velocidad",
-                                                                     ifelse(df$Fuera_o_Interseccion == 6, "Interseccion con carretera",
-                                                                            ifelse(df$Fuera_o_Interseccion == 7, "Interseccion con calle", NA)
-                                                                                          )
-                                                                                   )
-                                                                            )
-                                                                     )
-                                                              )
-                                                       )
-                                                )
-                                  
-table(fuera_o_interseccion)
-
-fuera_o_interseccion <- relevel(fuera_o_interseccion, ref = "Recta")
-df$Fuera_o_Interseccion <- fuera_o_interseccion
-
-###################################################################################################################
-
-#anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada == 1, "Si", ifelse(df$Anchura_Calzada == 2, "No", NA)))
-
-#table(anchura_calzada)
-
-#anchura_calzada <- relevel(anchura_calzada, ref = "Si")
-#df$Anchura_Calzada<- anchura_calzada
-
-###################################################################################################################
-
-inexperiencia_conductor <- as.factor(ifelse(df$Inexperiencia_Conductor == 1, "Si", ifelse(df$Inexperiencia_Conductor == 2,"No", NA)))
-
-table(inexperiencia_conductor)
-
-inexperiencia_conductor<- relevel(inexperiencia_conductor, ref = "Si")
-df$Inexperiencia_Conductor <- inexperiencia_conductor
-
-###################################################################################################################
-
-infraccion_norma_circulacion <- as.factor(ifelse(df$Infraccion_Norma_Circulacion == 1, "Si", ifelse(df$Infraccion_Norma_Circulacion == 2,"No", NA)))
-
-table(infraccion_norma_circulacion)
-
-infraccion_norma_circulacion <- relevel(infraccion_norma_circulacion, ref = "Si")
-df$Infraccion_Norma_Circulacion <- infraccion_norma_circulacion
-
-###################################################################################################################
-
-interseccion_acondicionamiento <- as.factor(ifelse(df$Interseccion_Acondicionamiento == 1, "Nada especial", 
-                                         ifelse(df$Interseccion_Acondicionamiento == 2, "Solo isletas o paso para peatones en via secundaria",
-                                                ifelse(df$Interseccion_Acondicionamiento == 3, "Paso para peatones o isleta en centro de via principal",
-                                                       ifelse(df$Interseccion_Acondicionamiento == 4, "Carril central de espera",
-                                                              ifelse(df$Interseccion_Acondicionamiento == 5, "Senal de giro izquiera",
-                                                                     ifelse(df$Interseccion_Acondicionamiento == 6, "Otro tipo",
-                                                                            ifelse(df$Interseccion_Acondicionamiento == 7, "No interseccion", NA)
-                                                                     )
-                                                              )
-                                                       )
-                                                )
-                                         )
-)
-)
-
-table(interseccion_acondicionamiento)
-
-interseccion_acondicionamiento <- relevel(interseccion_acondicionamiento, ref = "No interseccion")
-df$Interseccion_Acondicionamiento <- interseccion_acondicionamiento
-
-###################################################################################################################
-
-interseccion_tipo <- as.factor(ifelse(df$Interseccion_Tipo == 1, "En T o Y", 
-                                                   ifelse(df$Interseccion_Tipo == 2, "En X o -",
-                                                          ifelse(df$Interseccion_Tipo == 3, "Enlace de entrada",
-                                                                 ifelse(df$Interseccion_Tipo == 4, "Enlace de salida",
-                                                                        ifelse(df$Interseccion_Tipo == 5, "Giratoria",
-                                                                               ifelse(df$Interseccion_Tipo == 6, "Otros",
-                                                                                      ifelse(df$Interseccion_Tipo == 7, "No interseccion", NA)
-                                                                               )
-                                                                        )
-                                                                 )
-                                                          )
+                  )
+  
+  table(ano)
+  
+  ano <- relevel(ano, ref = "2007")
+  df$Ano <- ano
+  
+  ###################################################################################################################
+  
+  provincia <- as.factor(ifelse(df$Provincia==1, "Alicante", 
+                                ifelse(df$Provincia==2, "Castellon", "Valencia")))
+  
+  table(provincia)
+  
+  provincia <- relevel(provincia, ref = "Valencia")
+  df$Provincia <- provincia
+  
+  ###################################################################################################################
+  
+  dia_semana <- as.factor(ifelse(df$Dia_Semana==1, "Lunes", 
+                            ifelse(df$Dia_Semana==2, "Martes", 
+                                   ifelse(df$Dia_Semana==3, "Miercoles", 
+                                          ifelse(df$Dia_Semana==4, "Jueves", 
+                                                 ifelse(df$Dia_Semana==5, "Viernes", 
+                                                        ifelse(df$Dia_Semana==6, "Sabado", 
+                                                               ifelse(df$Dia_Semana==7, "Domingo", NA)
+                                                               )
+                                                        )
+                                                 )
+                                          )
+                                   )
+                            )
+                    )
+  
+  table(dia_semana)
+  
+  dia_semana <- relevel(dia_semana, ref = "Domingo")
+  df$Dia_Semana <- dia_semana
+  
+  ###################################################################################################################
+  
+  tipo_dia <- as.factor(ifelse(df$Tipo_Dia == 1, "Laborable", ifelse(df$Tipo_Dia == 2, "Vispera Festivo", ifelse(df$Tipo_Dia == 3, "Festivo", ifelse(df$Tipo_Dia == 4, "Puente", NA)))))
+  
+  table(tipo_dia)
+  
+  tipo_dia <- relevel(tipo_dia, ref = "Laborable")
+  df$Tipo_Dia <- tipo_dia
+  
+  ###################################################################################################################
+  
+  aceras <- as.factor(ifelse(df$Aceras == 1, "Si", ifelse(df$Aceras == 2,"No", NA)))
+  
+  table(aceras)
+  
+  aceras <- relevel(aceras, ref = "Si")
+  df$Aceras <- aceras
+  
+  ###################################################################################################################
+  
+  alcohol_drogas <- as.factor(ifelse(df$Alcohol_Drogas == 1, "Si", ifelse(df$Alcohol_Drogas == 2,"No", NA)))
+  
+  table(alcohol_drogas)
+  
+  alcohol_drogas <- relevel(alcohol_drogas, ref = "Si")
+  df$Alcohol_Drogas <- alcohol_drogas
+  
+  ###################################################################################################################
+  
+  anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada==1, "mayor_6", 
+                                ifelse(df$Anchura_Calzada==2, "entre_6_y_7", ifelse(df$Anchura_Calzada==3, "mayor_7", NA))))
+  
+  table(anchura_calzada)
+  
+  anchura_calzada <- relevel(anchura_calzada, ref = "mayor_7")
+  df$Anchura_Calzada <- anchura_calzada
+  
+  ###################################################################################################################
+  
+  anchura_carril <- as.factor(ifelse(df$Anchura_Carril==1, "mayor_3.75", 
+                                      ifelse(df$Anchura_Carril==2, "entre_3.25_y_3.75", ifelse(df$Anchura_Carril==3, "menor_3.25", NA))))
+  
+  table(anchura_carril)
+  
+  anchura_carril <- relevel(anchura_carril, ref = "entre_3.25_y_3.75")
+  df$Anchura_Carril <- anchura_carril
+  
+  ###################################################################################################################
+  
+  arcen <- as.factor(ifelse(df$Arcen==1, "Inexistente", 
+                                     ifelse(df$Arcen==2, "menor_1.5", 
+                                            ifelse(df$Arcen==3, "entre_1.5_y_2.5", 
+                                                   ifelse(df$Arcen==4, "mayor_2.5", 
+                                                          ifelse(df$Arcen==5, "mayor_2.5", NA))
                                                    )
-)
-)
-
-table(interseccion_tipo)
-
-interseccion_tipo <- relevel(interseccion_tipo, ref = "No interseccion")
-df$Interseccion_Tipo <- interseccion_tipo
-
-###################################################################################################################
-
-luminosidad <- as.factor(ifelse(df$Luminosidad==1, "Pleno dia", 
-                          ifelse(df$Luminosidad==2, "Crepusculo", 
-                                 ifelse(df$Luminosidad==3, "Suficiente", 
-                                        ifelse(df$Luminosidad==4, "Insuficiente", 
-                                               ifelse(df$Luminosidad==5, "Sin iluminacion", NA))
-                                 )
-                          )
-)
-)
-
-table(luminosidad)
-
-luminosidad <- relevel(luminosidad, ref = "Pleno dia")
-df$Luminosidad <- luminosidad
-
-###################################################################################################################
-
-mal_estado_vehiculo <- as.factor(ifelse(df$Mal_Estado_Vehiculo == 1, "Si", ifelse(df$Mal_Estado_Vehiculo == 2,"No", NA)))
-
-table(mal_estado_vehiculo)
-
-mal_estado_vehiculo <- relevel(mal_estado_vehiculo, ref = "Si")
-df$Mal_Estado_Vehiculo <- mal_estado_vehiculo
-
-###################################################################################################################
-
-marcas_viales <- as.factor(ifelse(df$Marcas_Viales==1, "Inexistentes", 
-                                ifelse(df$Marcas_Viales==2, "Solo separacion carriles", 
-                                       ifelse(df$Marcas_Viales==3, "Separacion carriles y bordes", 
-                                              ifelse(df$Marcas_Viales==4, "Solo separacion bordes", NA)
-                                              )
-                                       )
-                                )
-)
-
-
-table(marcas_viales)
-
-marcas_viales <- relevel(marcas_viales, ref = "Separacion carriles y bordes")
-df$Marcas_Viales <- marcas_viales
-
-###################################################################################################################
-
-mediana <- as.factor(ifelse(df$Mediana == 1, "Si", ifelse(df$Mediana == 2,"No", NA)))
-
-table(mediana)
-
-mediana <- relevel(mediana, ref = "Si")
-df$Mediana <- mediana
-
-###################################################################################################################
-
-meteorologia_adversa <- as.factor(ifelse(df$Meteorologia_Adversa == 1, "Si", ifelse(df$Meteorologia_Adversa == 2,"No", NA)))
-
-table(meteorologia_adversa)
-
-meteorologia_adversa <- relevel(meteorologia_adversa, ref = "Si")
-df$Meteorologia_Adversa <- meteorologia_adversa
-
-###################################################################################################################
-
-otras_circunstancias <- as.factor(ifelse(df$Otras_Circunstancias == 1, "Paso a nivel", 
-                                      ifelse(df$Otras_Circunstancias == 2, "Estrechamiento",
-                                             ifelse(df$Otras_Circunstancias == 3, "Camino de rasante",
-                                                    ifelse(df$Otras_Circunstancias == 4, "Fuerte descenso",
-                                                           ifelse(df$Otras_Circunstancias == 5, "Tramo deslizante senalizado",
-                                                                  ifelse(df$Otras_Circunstancias == 6, "Baden",
-                                                                         ifelse(df$Otras_Circunstancias == 7, "Escalon", 
-                                                                                ifelse(df$Otras_Circunstancias == 8, "Obras", 
-                                                                                       ifelse(df$Otras_Circunstancias == 9, "Baches",
-                                                                                              ifelse(df$Otras_Circunstancias == 10, "Inundacion",
-                                                                                                     ifelse(df$Otras_Circunstancias == 11, "Peralte invertido",
-                                                                                                            ifelse(df$Otras_Circunstancias == 12, "Fin carril lento",
-                                                                                                                   ifelse(df$Otras_Circunstancias == 13, "Otra",
-                                                                                                                          ifelse(df$Otras_Circunstancias == 14, "Ninguna", NA)
-                                                                  )
-                                                           )
-                                                    )
-                                             )
-                                      )
-)
-)
-)
-)
-)
-)
-)
-)
-)
-
-table(otras_circunstancias)
-
-otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
-df$Otras_Circunstancias <- otras_circunstancias
-
-###################################################################################################################
-
-otro_factor <- as.factor(ifelse(df$Otro_Factor == 1, "Si", ifelse(df$Otro_Factor == 2,"No", NA)))
-
-table(otro_factor)
-
-otro_factor <- relevel(otro_factor, ref = "Si")
-df$Otro_Factor <- otro_factor
-
-###################################################################################################################
-
-paneles_direccionales <- as.factor(ifelse(df$Paneles_Direccionales == 1, "Si", ifelse(df$Paneles_Direccionales == 2,"No", NA)))
-
-table(paneles_direccionales)
-
-paneles_direccionales <- relevel(paneles_direccionales, ref = "Si")
-df$Paneles_Direccionales <- paneles_direccionales
-
-###################################################################################################################
-
-prioridad_regulara_por <- as.factor(ifelse(df$Prioridad_Regulada_por == 1, "Agente", 
-                                      ifelse(df$Prioridad_Regulada_por == 2, "Semaforo",
-                                             ifelse(df$Prioridad_Regulada_por == 3, "Senal STOP",
-                                                    ifelse(df$Prioridad_Regulada_por == 4, "Senal ceda el paso",
-                                                           ifelse(df$Prioridad_Regulada_por == 5, "Solo marcas viales",
-                                                                  ifelse(df$Prioridad_Regulada_por == 6, "Paso peatones",
-                                                                         ifelse(df$Prioridad_Regulada_por == 7, "Otra senal", 
-                                                                                ifelse(df$Prioridad_Regulada_por == 8, "Ninguna",NA)
-                                                                  )
-                                                           )
-                                                    )
-                                             )
-                                      )
-                                      )
-)
-)
-
-table(prioridad_regulara_por)
-
-prioridad_regulara_por <- relevel(prioridad_regulara_por, ref = "Ninguna")
-df$Prioridad_Regulada_por <- prioridad_regulara_por
-
-###################################################################################################################
-
-senalizacion_peligro <- as.factor(ifelse(df$Senalizacion_Peligro==1, "Existente", 
-                                  ifelse(df$Senalizacion_Peligro==2, "Inexistente", 
-                                         ifelse(df$Senalizacion_Peligro==3, "Innecesaria", NA)
-                                         )
-                                  )
-)
-
-
-table(senalizacion_peligro)
-
-senalizacion_peligro <- relevel(senalizacion_peligro, ref = "Existente")
-df$Senalizacion_Peligro <- senalizacion_peligro
-
-###################################################################################################################
-
-sentido <- as.factor(ifelse(df$Sentido == 1, "Ascendente", ifelse(df$Sentido == 2,"Descendente", NA)))
-
-table(sentido)
-
-df$Sentido <- sentido
-
-###################################################################################################################
-
-sin_opinion_definida <- as.factor(ifelse(df$Sin_Opinion_Definida == 1, "Si", ifelse(df$Sin_Opinion_Definida == 2,"No", NA)))
-
-table(sin_opinion_definida)
-
-sin_opinion_definida <- relevel(sin_opinion_definida, ref = "Si")
-df$Sin_Opinion_Definida <- sin_opinion_definida
-
-###################################################################################################################
-
-
-superficie <- as.factor(ifelse(df$Superficie == 1, "Seca y limpia", 
-                                          ifelse(df$Superficie == 2, "Umbria",
-                                                 ifelse(df$Superficie == 3, "Mojada",
-                                                        ifelse(df$Superficie == 4, "Helada",
-                                                               ifelse(df$Superficie == 5, "Nevada",
-                                                                      ifelse(df$Superficie == 6, "Barrillo",
-                                                                             ifelse(df$Superficie == 7, "Gravilla suelta",
-                                                                                    ifelse(df$Superficie == 8, "Aceite", 
-                                                                                           ifelse(df$Superficie == 9, "Otro", NA))))))))))
-
-table(superficie)
-
-superficie <- relevel(superficie, ref = "Seca y limpia")
-df$Superficie <- superficie
-
-###################################################################################################################
-
-tipo_via <- as.factor(ifelse(df$Tipo_Via == 1, "Autopista", 
-                               ifelse(df$Tipo_Via == 2, "Autovia",
-                                      ifelse(df$Tipo_Via == 3, "Via rapida",
-                                             ifelse(df$Tipo_Via == 4, "Via convencional con carril lento",
-                                                    ifelse(df$Tipo_Via == 5, "Via convencional sin carril lento", #MIRAR DOCUMENTACION
-                                                           ifelse(df$Tipo_Via == 6, "Camino vecinal",
-                                                                  ifelse(df$Tipo_Via == 7, "Via de servicio",
-                                                                         ifelse(df$Tipo_Via == 8, "Ramal enlace", 
-                                                                                ifelse(df$Tipo_Via == 9, "Otro", NA))))))))))
-
-table(tipo_via)
-
-tipo_via <- relevel(tipo_via, ref = "Via convencional sin carril lento")
-df$Tipo_Via <- tipo_via
-
-###################################################################################################################
-
-tramo_obras <- as.factor(ifelse(df$Tramo_Obras == 1, "Si", ifelse(df$Tramo_Obras == 2,"No", NA)))
-
-table(tramo_obras)
-
-tramo_obras <- relevel(tramo_obras, ref = "Si")
-df$Tramo_Obras <- tramo_obras
-
-###################################################################################################################
-
-velocidad_inadecuada <- as.factor(ifelse(df$Velocidad_Inadecuada == 1, "Si", ifelse(df$Velocidad_Inadecuada == 2,"No", NA)))
-
-table(velocidad_inadecuada)
-
-velocidad_inadecuada <- relevel(velocidad_inadecuada, ref = "Si")
-df$Velocidad_Inadecuada <- velocidad_inadecuada
-
-###################################################################################################################
-
-visibilidad_restringida_por <- as.factor(ifelse(df$Visibilidad_Restringida_por == 1, "Edificios", 
-                                           ifelse(df$Visibilidad_Restringida_por == 2, "Terreno",
-                                                  ifelse(df$Visibilidad_Restringida_por == 3, "Vegetacion",
-                                                         ifelse(df$Visibilidad_Restringida_por == 4, "Factores atmosfericos",
-                                                                ifelse(df$Visibilidad_Restringida_por == 5, "Deslumbramiento",
-                                                                       ifelse(df$Visibilidad_Restringida_por == 6, "Polvo/humo",
-                                                                              ifelse(df$Visibilidad_Restringida_por == 7, "Otro", 
-                                                                                     ifelse(df$Visibilidad_Restringida_por == 8, "Sin restriccion",NA)
+                                            )
+                            )
+                     )
+  
+  table(arcen)
+  
+  arcen <- relevel(arcen, ref = "entre_1.5_y_2.5")
+  df$Arcen <- arcen
+  
+  ###################################################################################################################
+  
+  arcen_pavimentado <- as.factor(ifelse(df$Arcen_Pavimentado == 1, "Si", ifelse(df$Arcen_Pavimentado == 2, "No", NA)))
+  
+  table(arcen_pavimentado)
+  
+  arcen_pavimentado <- relevel(arcen_pavimentado, ref = "No")
+  df$Arcen_Pavimentado <- arcen_pavimentado
+  
+  ###################################################################################################################
+  
+  averia_mecanica <- as.factor(ifelse(df$Averia_Mecanica == 1, "Si", ifelse(df$Averia_Mecanica == 2,"No", NA)))
+  
+  table(averia_mecanica)
+  
+  averia_mecanica <- relevel(averia_mecanica, ref = "Si")
+  df$Averia_Mecanica <- averia_mecanica
+  
+  ###################################################################################################################
+  
+  barrera_seguridad <- as.factor(ifelse(df$Barrera_Seguridad == 1, "Si", ifelse(df$Barrera_Seguridad == 2, "No", NA)))
+  
+  table(barrera_seguridad)
+  
+  barrera_seguridad <- relevel(barrera_seguridad, ref = "Si")
+  df$Barrera_Seguridad <- barrera_seguridad
+  
+  ###################################################################################################################
+  
+  cansancio_sueno <- as.factor(ifelse(df$Cansancio_Sueno == 1, "Si", ifelse(df$Cansancio_Sueno == 2, "No", NA)))
+  
+  table(cansancio_sueno)
+  
+  cansancio_sueno <- relevel(cansancio_sueno, ref = "Si")
+  df$Cansancio_Sueno <- cansancio_sueno
+  
+  ###################################################################################################################
+  
+  
+  captafaros <- as.factor(ifelse(df$Captafaros == 1, "Si", ifelse(df$Captafaros == 2,"No", NA)))
+  
+  table(captafaros)
+  
+  captafaros <- relevel(captafaros, ref = "Si")
+  df$Captafaros <- captafaros
+  
+  ###################################################################################################################
+  
+  circulacion <- as.factor(ifelse(df$Circulacion==1, "Fluida", 
+                                      ifelse(df$Circulacion==2, "Densa", ifelse(df$Circulacion==3,"Congestionada", NA))))
+  
+  table(circulacion)
+  
+  circulacion <- relevel(circulacion, ref = "Fluida")
+  df$Circulacion <- circulacion
+  
+  ###################################################################################################################
+  
+  circulacion_medidas_especiales <- as.factor(ifelse(df$Circulacion_Medidas_Especiales == 1, "Carril reversible", 
+                                                     ifelse(df$Circulacion_Medidas_Especiales == 2, "Habilitacion arcen", 
+                                                            ifelse(df$Circulacion_Medidas_Especiales == 3, "Otra medida", 
+                                                                   ifelse(df$Circulacion_Medidas_Especiales == 4,"Ninguna medida", NA)))))
+  
+  table(circulacion_medidas_especiales)
+  
+  circulacion_medidas_especiales <- relevel(circulacion_medidas_especiales, ref = "Ninguna medida")
+  df$Circulacion_Medidas_Especiales <- circulacion_medidas_especiales
+  
+  ###################################################################################################################
+  
+  circular_sentido_contrario <- as.factor(ifelse(df$Circular_Sentido_Contrario == 1, "Si", ifelse(df$Circular_Sentido_Contrario == 2,"No", NA)))
+  
+  table(circular_sentido_contrario)
+  
+  circular_sentido_contrario <- relevel(circular_sentido_contrario, ref = "Si")
+  df$Circular_Sentido_Contrario <- circular_sentido_contrario
+  
+  ###################################################################################################################
+  
+  distraccion <- as.factor(ifelse(df$Distraccion == 1, "Si", ifelse(df$Distraccion == 2,"No", NA)))
+  
+  table(distraccion)
+  
+  distraccion <- relevel(distraccion, ref = "Si")
+  df$Distraccion <- distraccion
+  
+  ###################################################################################################################
+  
+  enfermedad <- as.factor(ifelse(df$Enfermedad == 1, "Si", ifelse(df$Enfermedad == 2, "No", NA)))
+  
+  table(enfermedad)
+  
+  enfermedad <- relevel(enfermedad, ref = "Si")
+  df$Enfermedad <- enfermedad
+  
+  ###################################################################################################################
+  
+  estado_condicion_senalizacion <- as.factor(ifelse(df$Estado_Condicion_Senalizacion == 1, "Si", ifelse(df$Estado_Condicion_Senalizacion == 2,"No", NA)))
+  
+  table(estado_condicion_senalizacion)
+  
+  estado_condicion_senalizacion <- relevel(estado_condicion_senalizacion, ref = "Si")
+  df$Estado_Condicion_Senalizacion <- estado_condicion_senalizacion
+  
+  ###################################################################################################################
+  
+  estado_condicion_via <- as.factor(ifelse(df$Estado_Condicion_Via == 1, "Si", ifelse(df$Estado_Condicion_Via == 2,"No", NA)))
+  
+  table(estado_condicion_via)
+  
+  estado_condicion_via <- relevel(estado_condicion_via, ref = "Si")
+  df$Estado_Condicion_Via <- estado_condicion_via
+  
+  ###################################################################################################################
+  
+  factores_atmosfericos <- as.factor(ifelse(df$Factores_Atmosfericos == 1, "Buen tiempo", 
+                                            ifelse(df$Factores_Atmosfericos == 2, "Niebla intensa",
+                                                   ifelse(df$Factores_Atmosfericos == 3, "Niebla ligera",
+                                                          ifelse(df$Factores_Atmosfericos == 4, "Lloviznando",
+                                                                 ifelse(df$Factores_Atmosfericos == 5, "Lluvia fuerte",
+                                                                        ifelse(df$Factores_Atmosfericos == 6, "Granizando",
+                                                                               ifelse(df$Factores_Atmosfericos == 7, "Nevado",
+                                                                                      ifelse(df$Factores_Atmosfericos == 8, "Viento fuerte", 
+                                                                                             ifelse(df$Factores_Atmosfericos == 9, "Otro", NA))))))))))
+  
+  table(factores_atmosfericos)
+  
+  factores_atmosfericos <- relevel(factores_atmosfericos, ref = "Buen tiempo")
+  df$Factores_Atmosfericos <- factores_atmosfericos
+  
+  ###################################################################################################################
+  
+  fuera_o_interseccion <- as.factor(ifelse(df$Fuera_o_Interseccion == 1, "Recta", 
+                                           ifelse(df$Fuera_o_Interseccion == 2, "Curva suave",
+                                                  ifelse(df$Fuera_o_Interseccion == 3, "Curva fuerte sin senal",
+                                                         ifelse(df$Fuera_o_Interseccion == 4, "Curva fuerte con senal y sin senal velocidad",
+                                                                ifelse(df$Fuera_o_Interseccion == 5, "Curva fuerte con senal y con senal velocidad",
+                                                                       ifelse(df$Fuera_o_Interseccion == 6, "Interseccion con carretera",
+                                                                              ifelse(df$Fuera_o_Interseccion == 7, "Interseccion con calle", NA)
+                                                                                            )
+                                                                                     )
                                                                               )
                                                                        )
                                                                 )
                                                          )
                                                   )
+                                    
+  table(fuera_o_interseccion)
+  
+  fuera_o_interseccion <- relevel(fuera_o_interseccion, ref = "Recta")
+  df$Fuera_o_Interseccion <- fuera_o_interseccion
+  
+  ###################################################################################################################
+  
+  #anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada == 1, "Si", ifelse(df$Anchura_Calzada == 2, "No", NA)))
+  
+  #table(anchura_calzada)
+  
+  #anchura_calzada <- relevel(anchura_calzada, ref = "Si")
+  #df$Anchura_Calzada<- anchura_calzada
+  
+  ###################################################################################################################
+  
+  inexperiencia_conductor <- as.factor(ifelse(df$Inexperiencia_Conductor == 1, "Si", ifelse(df$Inexperiencia_Conductor == 2,"No", NA)))
+  
+  table(inexperiencia_conductor)
+  
+  inexperiencia_conductor<- relevel(inexperiencia_conductor, ref = "Si")
+  df$Inexperiencia_Conductor <- inexperiencia_conductor
+  
+  ###################################################################################################################
+  
+  infraccion_norma_circulacion <- as.factor(ifelse(df$Infraccion_Norma_Circulacion == 1, "Si", ifelse(df$Infraccion_Norma_Circulacion == 2,"No", NA)))
+  
+  table(infraccion_norma_circulacion)
+  
+  infraccion_norma_circulacion <- relevel(infraccion_norma_circulacion, ref = "Si")
+  df$Infraccion_Norma_Circulacion <- infraccion_norma_circulacion
+  
+  ###################################################################################################################
+  
+  interseccion_acondicionamiento <- as.factor(ifelse(df$Interseccion_Acondicionamiento == 1, "Nada especial", 
+                                           ifelse(df$Interseccion_Acondicionamiento == 2, "Solo isletas o paso para peatones en via secundaria",
+                                                  ifelse(df$Interseccion_Acondicionamiento == 3, "Paso para peatones o isleta en centro de via principal",
+                                                         ifelse(df$Interseccion_Acondicionamiento == 4, "Carril central de espera",
+                                                                ifelse(df$Interseccion_Acondicionamiento == 5, "Senal de giro izquiera",
+                                                                       ifelse(df$Interseccion_Acondicionamiento == 6, "Otro tipo",
+                                                                              ifelse(df$Interseccion_Acondicionamiento == 7, "No interseccion", NA)
+                                                                       )
+                                                                )
+                                                         )
+                                                  )
                                            )
-)
-)
-
-table(visibilidad_restringida_por)
-
-visibilidad_restringida_por <- relevel(visibilidad_restringida_por, ref = "Terreno")
-df$Visibilidad_Restringida_por <- visibilidad_restringida_por
-
-###################################################################################################################
-
-visibilidad_senalizacion_vertical <- as.factor(ifelse(df$Visibilidad_Senalizacion_Vertical==1, "Buena", 
-                                         ifelse(df$Visibilidad_Senalizacion_Vertical==2, "Deficiente", 
-                                                ifelse(df$Visibilidad_Senalizacion_Vertical==3, "Nula", NA)
+  )
+  )
+  
+  table(interseccion_acondicionamiento)
+  
+  interseccion_acondicionamiento <- relevel(interseccion_acondicionamiento, ref = "No interseccion")
+  df$Interseccion_Acondicionamiento <- interseccion_acondicionamiento
+  
+  ###################################################################################################################
+  
+  interseccion_tipo <- as.factor(ifelse(df$Interseccion_Tipo == 1, "En T o Y", 
+                                                     ifelse(df$Interseccion_Tipo == 2, "En X o -",
+                                                            ifelse(df$Interseccion_Tipo == 3, "Enlace de entrada",
+                                                                   ifelse(df$Interseccion_Tipo == 4, "Enlace de salida",
+                                                                          ifelse(df$Interseccion_Tipo == 5, "Giratoria",
+                                                                                 ifelse(df$Interseccion_Tipo == 6, "Otros",
+                                                                                        ifelse(df$Interseccion_Tipo == 7, "No interseccion", NA)
+                                                                                 )
+                                                                          )
+                                                                   )
+                                                            )
+                                                     )
+  )
+  )
+  
+  table(interseccion_tipo)
+  
+  interseccion_tipo <- relevel(interseccion_tipo, ref = "No interseccion")
+  df$Interseccion_Tipo <- interseccion_tipo
+  
+  ###################################################################################################################
+  
+  luminosidad <- as.factor(ifelse(df$Luminosidad==1, "Pleno dia", 
+                            ifelse(df$Luminosidad==2, "Crepusculo", 
+                                   ifelse(df$Luminosidad==3, "Suficiente", 
+                                          ifelse(df$Luminosidad==4, "Insuficiente", 
+                                                 ifelse(df$Luminosidad==5, "Sin iluminacion", NA))
+                                   )
+                            )
+  )
+  )
+  
+  table(luminosidad)
+  
+  luminosidad <- relevel(luminosidad, ref = "Pleno dia")
+  df$Luminosidad <- luminosidad
+  
+  ###################################################################################################################
+  
+  mal_estado_vehiculo <- as.factor(ifelse(df$Mal_Estado_Vehiculo == 1, "Si", ifelse(df$Mal_Estado_Vehiculo == 2,"No", NA)))
+  
+  table(mal_estado_vehiculo)
+  
+  mal_estado_vehiculo <- relevel(mal_estado_vehiculo, ref = "Si")
+  df$Mal_Estado_Vehiculo <- mal_estado_vehiculo
+  
+  ###################################################################################################################
+  
+  marcas_viales <- as.factor(ifelse(df$Marcas_Viales==1, "Inexistentes", 
+                                  ifelse(df$Marcas_Viales==2, "Solo separacion carriles", 
+                                         ifelse(df$Marcas_Viales==3, "Separacion carriles y bordes", 
+                                                ifelse(df$Marcas_Viales==4, "Solo separacion bordes", NA)
+                                                )
                                          )
-)
-)
+                                  )
+  )
+  
+  
+  table(marcas_viales)
+  
+  marcas_viales <- relevel(marcas_viales, ref = "Separacion carriles y bordes")
+  df$Marcas_Viales <- marcas_viales
+  
+  ###################################################################################################################
+  
+  mediana <- as.factor(ifelse(df$Mediana == 1, "Si", ifelse(df$Mediana == 2,"No", NA)))
+  
+  table(mediana)
+  
+  mediana <- relevel(mediana, ref = "Si")
+  df$Mediana <- mediana
+  
+  ###################################################################################################################
+  
+  meteorologia_adversa <- as.factor(ifelse(df$Meteorologia_Adversa == 1, "Si", ifelse(df$Meteorologia_Adversa == 2,"No", NA)))
+  
+  table(meteorologia_adversa)
+  
+  meteorologia_adversa <- relevel(meteorologia_adversa, ref = "Si")
+  df$Meteorologia_Adversa <- meteorologia_adversa
+  
+  ###################################################################################################################
+  
+  otras_circunstancias <- as.factor(ifelse(df$Otras_Circunstancias == 1, "Paso a nivel", 
+                                        ifelse(df$Otras_Circunstancias == 2, "Estrechamiento",
+                                               ifelse(df$Otras_Circunstancias == 3, "Camino de rasante",
+                                                      ifelse(df$Otras_Circunstancias == 4, "Fuerte descenso",
+                                                             ifelse(df$Otras_Circunstancias == 5, "Tramo deslizante senalizado",
+                                                                    ifelse(df$Otras_Circunstancias == 6, "Baden",
+                                                                           ifelse(df$Otras_Circunstancias == 7, "Escalon", 
+                                                                                  ifelse(df$Otras_Circunstancias == 8, "Obras", 
+                                                                                         ifelse(df$Otras_Circunstancias == 9, "Baches",
+                                                                                                ifelse(df$Otras_Circunstancias == 10, "Inundacion",
+                                                                                                       ifelse(df$Otras_Circunstancias == 11, "Peralte invertido",
+                                                                                                              ifelse(df$Otras_Circunstancias == 12, "Fin carril lento",
+                                                                                                                     ifelse(df$Otras_Circunstancias == 13, "Otra",
+                                                                                                                            ifelse(df$Otras_Circunstancias == 14, "Ninguna", NA)
+                                                                    )
+                                                             )
+                                                      )
+                                               )
+                                        )
+  )
+  )
+  )
+  )
+  )
+  )
+  )
+  )
+  )
+  
+  table(otras_circunstancias)
+  
+  otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
+  df$Otras_Circunstancias <- otras_circunstancias
+  
+  ###################################################################################################################
+  
+  otro_factor <- as.factor(ifelse(df$Otro_Factor == 1, "Si", ifelse(df$Otro_Factor == 2,"No", NA)))
+  
+  table(otro_factor)
+  
+  otro_factor <- relevel(otro_factor, ref = "Si")
+  df$Otro_Factor <- otro_factor
+  
+  ###################################################################################################################
+  
+  paneles_direccionales <- as.factor(ifelse(df$Paneles_Direccionales == 1, "Si", ifelse(df$Paneles_Direccionales == 2,"No", NA)))
+  
+  table(paneles_direccionales)
+  
+  paneles_direccionales <- relevel(paneles_direccionales, ref = "Si")
+  df$Paneles_Direccionales <- paneles_direccionales
+  
+  ###################################################################################################################
+  
+  prioridad_regulara_por <- as.factor(ifelse(df$Prioridad_Regulada_por == 1, "Agente", 
+                                        ifelse(df$Prioridad_Regulada_por == 2, "Semaforo",
+                                               ifelse(df$Prioridad_Regulada_por == 3, "Senal STOP",
+                                                      ifelse(df$Prioridad_Regulada_por == 4, "Senal ceda el paso",
+                                                             ifelse(df$Prioridad_Regulada_por == 5, "Solo marcas viales",
+                                                                    ifelse(df$Prioridad_Regulada_por == 6, "Paso peatones",
+                                                                           ifelse(df$Prioridad_Regulada_por == 7, "Otra senal", 
+                                                                                  ifelse(df$Prioridad_Regulada_por == 8, "Ninguna",NA)
+                                                                    )
+                                                             )
+                                                      )
+                                               )
+                                        )
+                                        )
+  )
+  )
+  
+  table(prioridad_regulara_por)
+  
+  prioridad_regulara_por <- relevel(prioridad_regulara_por, ref = "Ninguna")
+  df$Prioridad_Regulada_por <- prioridad_regulara_por
+  
+  ###################################################################################################################
+  
+  senalizacion_peligro <- as.factor(ifelse(df$Senalizacion_Peligro==1, "Existente", 
+                                    ifelse(df$Senalizacion_Peligro==2, "Inexistente", 
+                                           ifelse(df$Senalizacion_Peligro==3, "Innecesaria", NA)
+                                           )
+                                    )
+  )
+  
+  
+  table(senalizacion_peligro)
+  
+  senalizacion_peligro <- relevel(senalizacion_peligro, ref = "Existente")
+  df$Senalizacion_Peligro <- senalizacion_peligro
+  
+  ###################################################################################################################
+  
+  sentido <- as.factor(ifelse(df$Sentido == 1, "Ascendente", ifelse(df$Sentido == 2,"Descendente", NA)))
+  
+  table(sentido)
+  
+  df$Sentido <- sentido
+  
+  ###################################################################################################################
+  
+  sin_opinion_definida <- as.factor(ifelse(df$Sin_Opinion_Definida == 1, "Si", ifelse(df$Sin_Opinion_Definida == 2,"No", NA)))
+  
+  table(sin_opinion_definida)
+  
+  sin_opinion_definida <- relevel(sin_opinion_definida, ref = "Si")
+  df$Sin_Opinion_Definida <- sin_opinion_definida
+  
+  ###################################################################################################################
+  
+  
+  superficie <- as.factor(ifelse(df$Superficie == 1, "Seca y limpia", 
+                                            ifelse(df$Superficie == 2, "Umbria",
+                                                   ifelse(df$Superficie == 3, "Mojada",
+                                                          ifelse(df$Superficie == 4, "Helada",
+                                                                 ifelse(df$Superficie == 5, "Nevada",
+                                                                        ifelse(df$Superficie == 6, "Barrillo",
+                                                                               ifelse(df$Superficie == 7, "Gravilla suelta",
+                                                                                      ifelse(df$Superficie == 8, "Aceite", 
+                                                                                             ifelse(df$Superficie == 9, "Otro", NA))))))))))
+  
+  table(superficie)
+  
+  superficie <- relevel(superficie, ref = "Seca y limpia")
+  df$Superficie <- superficie
+  
+  ###################################################################################################################
+  
+  tipo_via <- as.factor(ifelse(df$Tipo_Via == 1, "Autopista", 
+                                 ifelse(df$Tipo_Via == 2, "Autovia",
+                                        ifelse(df$Tipo_Via == 3, "Via rapida",
+                                               ifelse(df$Tipo_Via == 4, "Via convencional con carril lento",
+                                                      ifelse(df$Tipo_Via == 5, "Via convencional sin carril lento", #MIRAR DOCUMENTACION
+                                                             ifelse(df$Tipo_Via == 6, "Camino vecinal",
+                                                                    ifelse(df$Tipo_Via == 7, "Via de servicio",
+                                                                           ifelse(df$Tipo_Via == 8, "Ramal enlace", 
+                                                                                  ifelse(df$Tipo_Via == 9, "Otro", NA))))))))))
+  
+  table(tipo_via)
+  
+  tipo_via <- relevel(tipo_via, ref = "Via convencional sin carril lento")
+  df$Tipo_Via <- tipo_via
+  
+  ###################################################################################################################
+  
+  tramo_obras <- as.factor(ifelse(df$Tramo_Obras == 1, "Si", ifelse(df$Tramo_Obras == 2,"No", NA)))
+  
+  table(tramo_obras)
+  
+  tramo_obras <- relevel(tramo_obras, ref = "Si")
+  df$Tramo_Obras <- tramo_obras
+  
+  ###################################################################################################################
+  
+  velocidad_inadecuada <- as.factor(ifelse(df$Velocidad_Inadecuada == 1, "Si", ifelse(df$Velocidad_Inadecuada == 2,"No", NA)))
+  
+  table(velocidad_inadecuada)
+  
+  velocidad_inadecuada <- relevel(velocidad_inadecuada, ref = "Si")
+  df$Velocidad_Inadecuada <- velocidad_inadecuada
+  
+  ###################################################################################################################
+  
+  visibilidad_restringida_por <- as.factor(ifelse(df$Visibilidad_Restringida_por == 1, "Edificios", 
+                                             ifelse(df$Visibilidad_Restringida_por == 2, "Terreno",
+                                                    ifelse(df$Visibilidad_Restringida_por == 3, "Vegetacion",
+                                                           ifelse(df$Visibilidad_Restringida_por == 4, "Factores atmosfericos",
+                                                                  ifelse(df$Visibilidad_Restringida_por == 5, "Deslumbramiento",
+                                                                         ifelse(df$Visibilidad_Restringida_por == 6, "Polvo/humo",
+                                                                                ifelse(df$Visibilidad_Restringida_por == 7, "Otro", 
+                                                                                       ifelse(df$Visibilidad_Restringida_por == 8, "Sin restriccion",NA)
+                                                                                )
+                                                                         )
+                                                                  )
+                                                           )
+                                                    )
+                                             )
+  )
+  )
+  
+  table(visibilidad_restringida_por)
+  
+  visibilidad_restringida_por <- relevel(visibilidad_restringida_por, ref = "Terreno")
+  df$Visibilidad_Restringida_por <- visibilidad_restringida_por
+  
+  ###################################################################################################################
+  
+  visibilidad_senalizacion_vertical <- as.factor(ifelse(df$Visibilidad_Senalizacion_Vertical==1, "Buena", 
+                                           ifelse(df$Visibilidad_Senalizacion_Vertical==2, "Deficiente", 
+                                                  ifelse(df$Visibilidad_Senalizacion_Vertical==3, "Nula", NA)
+                                           )
+  )
+  )
+  
+  
+  table(visibilidad_senalizacion_vertical)
+  
+  visibilidad_senalizacion_vertical <- relevel(visibilidad_senalizacion_vertical, ref = "Deficiente")
+  df$Visibilidad_Senalizacion_Vertical <- visibilidad_senalizacion_vertical
+  
+  ###################################################################################################################
+  
+  zona <- as.factor(ifelse(df$Zona==1, "Carretera", 
+                      ifelse(df$Zona==2, "Urbana", 
+                        ifelse(df$Zona==3, "Travesia", NA)
+                    )
+  )
+  )
+  
+  
+  table(zona)
+  
+  zona <- relevel(zona, ref = "Carretera")
+  df$Zona <- zona
+  
+  ###################################################################################################################
+  
+  hitos_arista <- as.factor(ifelse(df$Hitos_Arista == 1, "Si", ifelse(df$Hitos_Arista == 2,"No", NA)))
+  
+  table(hitos_arista)
+  
+  hitos_arista <- relevel(hitos_arista, ref = "Si")
+  df$Hitos_Arista <- hitos_arista
+  
+  ###################################################################################################################
+  
+  irrupcion_animal <- as.factor(ifelse(df$Irrupcion_Animal == 1, "Si", ifelse(df$Irrupcion_Animal == 2,"No", NA)))
+  
+  table(irrupcion_animal)
+  
+  irrupcion_animal <- relevel(irrupcion_animal, ref = "Si")
+  df$Irrupcion_Animal <- irrupcion_animal
+  
+  ###################################################################################################################
+  
+  gravedad <- as.factor(ifelse(df$N_Muertos == 0 & df$N_Graves == 0 & df$N_Leves == 0,"No", "Si"))
+  df$Gravedad <- gravedad
+  
+  ###################################################################################################################
+  
+  timestamp <- df %>% 
+    rowwise() %>%
+    summarise(datetimes = paste0(Ano,'-',ifelse(Mes < 10, paste0('0',Mes), Mes),'-',ifelse(Dia < 10, paste0('0',Dia), Dia),' ',Hora_Real,':00')) %>%
+    select(datetimes) %>%
+    purrr::map(., function(x) strptime(x, format="%Y-%m-%d %H:%M")) %>%
+    as.data.frame(.)
+  
+  df$Timestamp <- timestamp  
+  
+  return(df)
+}
 
 
-table(visibilidad_senalizacion_vertical)
-
-visibilidad_senalizacion_vertical <- relevel(visibilidad_senalizacion_vertical, ref = "Deficiente")
-df$Visibilidad_Senalizacion_Vertical <- visibilidad_senalizacion_vertical
-
-###################################################################################################################
-
-zona <- as.factor(ifelse(df$Zona==1, "Carretera", 
-                    ifelse(df$Zona==2, "Urbana", 
-                      ifelse(df$Zona==3, "Travesia", NA)
-                  )
-)
-)
-
-
-table(zona)
-
-zona <- relevel(zona, ref = "Carretera")
-df$Zona <- zona
-
-###################################################################################################################
-
-# Hitos_Arista?
-
-###################################################################################################################
-
-# Irrupcion_Animal?
-
-###################################################################################################################
-
-gravedad <- as.factor(ifelse(df$N_Muertos == 0 & df$N_Graves == 0 & df$N_Leves == 0,"No", "Si"))
-df$Gravedad <- gravedad
-
-###################################################################################################################
-
-timestamp <- df %>% 
-  rowwise() %>%
-  summarise(datetimes = paste0(Ano,'-',ifelse(Mes < 10, paste0('0',Mes), Mes),'-',ifelse(Dia < 10, paste0('0',Dia), Dia),' ',Hora_Real,':00')) %>%
-  select(datetimes) %>%
-  purrr::map(., function(x) strptime(x, format="%Y-%m-%d %H:%M")) %>%
-  as.data.frame(.)
-
-df$Timestamp <- timestamp
 ```
 
 # Guardamos en un csv los datos limpiados
 ```{r}
-write.csv(df, "./Cleaned.csv", row.names = T)
+df.train <- clean_data(df.train)
+df.test <- clean_data(df.test)
+
+write.csv(df.train, "./cleaned_train.csv", row.names = T)
+write.csv(df.test, "./cleaned_test.csv", row.names = T)
 ```
 
 
@@ -668,7 +689,7 @@ write.csv(df, "./Cleaned.csv", row.names = T)
 
 ```{r}
 #Este informe mejor para ver las variables con muchos missing
-kable(didq_summry(df))
+kable(didq_summry(df.train))
 
 # Variables con altos porcentaje de missing:
 #--------------------------------------------
@@ -687,9 +708,10 @@ kable(didq_summry(df))
 # Lado_Salida: 60.12%
 # Otro: 97.28%
 
-xda::numSummary(df)
-xda::charSummary(df)
+xda::numSummary(df.train)
+xda::charSummary(df.train)
 ```
 
 ### ¿Hacer categoría de franja del día (6-10, 10-13, 13-15, 15-17, 17-20, 20-12, 12-6)
+### Categoría franja horaria: 
 
