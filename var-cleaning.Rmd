@@ -223,7 +223,7 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  enfermedad <- as.factor(ifelse(df$Enfermedad == 1, "Si", ifelse(df$Enfermedad == 2, "No", NA)))
+  enfermedad <- as.factor(ifelse(df$Enfermedad == 2, "Si", ifelse(df$Enfermedad == 1, "No", NA)))
   
   table(enfermedad)
   
@@ -674,18 +674,99 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  df$hora_cat <- as.factor(ifelse(as.numeric(df$Hora_Real) %in% c(2, 3, 10, 11, 12, 13, 14, 17, 20), "Hora_grave", "Hora_leve"))
+  df$Hora_Real <- as.factor(ifelse(as.numeric(df$Hora_Real) %in% c(2, 3, 10, 11, 12, 13, 14, 17, 20), "Hora_grave", "Hora_leve"))
 
 #####################################################################################################################
 
-  df$Tipo_Via_cat <- as.factor(ifelse(df$Tipo_Via == "Via convencional sin carril lento", "Conv rapida", ifelse(df$Tipo_Via == "Autovia", "Autovia", "Resto")))
+  df$Tipo_Via <- as.factor(ifelse(df$Tipo_Via == "Via convencional sin carril lento", "Conv rapida", ifelse(df$Tipo_Via == "Autovia", "Autovia", "Resto")))
   
   ###################################################################################################################
   
-  df$Anchura_Calzada_cat <- as.factor(ifelse(df$Anchura_Calzada == "mayor_7", "mayor_7", "menor_7"))
+  df$Anchura_Calzada <- as.factor(ifelse(df$Anchura_Calzada == "mayor_7", "mayor_7", "menor_7"))
                                            ###################################################################################################################
   
-  df$Anchura_Carril_cat <- as.factor(ifelse(df$Anchura_Carril == "entre_3.25_y_3.75", "Correcta", "NoCorrecta"))
+  df$Anchura_Carril <- as.factor(ifelse(df$Anchura_Carril == "entre_3.25_y_3.75", "Correcta", "NoCorrecta"))
+  
+  ###################################################################################################################
+  
+  df$Arcen <- as.factor(ifelse(df$Arcen == "Inexistente" | df$Arcen == "menor_1.5", "Estrecho", "Ancho"))
+  
+  ###################################################################################################################
+  
+  tipo_dia <- as.factor(case_when(
+                df$Tipo_Dia %>% is_in(c(1, 4)) ~ 'NoGrave',
+                df$Tipo_Dia %>% is_in(c(2, 3)) ~ 'Grave'
+  ))
+
+  table(tipo_dia)
+  
+  tipo_dia <- relevel(tipo_dia, ref = "NoGrave")
+  df$Tipo_Dia <- tipo_dia
+  
+  ###################################################################################################################
+  
+  df$Interseccion_Tipo <- as.factor(ifelse(df$Interseccion_Tipo == "No interseccion" | df$Interseccion_Tipo == "Enlace de salida", "TipoA", ifelse(df$Interseccion_Tipo == "Enlace de entrada" | df$Interseccion_Tipo == "Giratoria", "TipoB", "TipoC")))  
+  
+  ###################################################################################################################
+  
+  df$Superficie <- as.factor(ifelse(df$Superficie == "Seca y limpia" | df$Superficie == "Aceite" | df$Superficie == "Otro", "TipoA", ifelse(df$Superficie == "Umbria" | df$Superficie == "Gravilla suelta" | df$Superficie == "Nevada", "TipoB", "TipoC")))
+  
+  ###################################################################################################################
+  
+  df$Interseccion_Acondicionamiento <- as.factor(ifelse(df$Interseccion_Acondicionamiento == "Carril central de espera" | df$Interseccion_Acondicionamiento == "Senal de giro izquierda", "TipoA", "TipoB"))
+  
+  ###################################################################################################################
+  
+  prioridad_regulara_por <- as.factor(case_when(
+                                    df$Prioridad_Regulada_por %>% is_in(c(1, 2, 3, 6)) ~ 'Grave',
+                                    df$Prioridad_Regulada_por %>% is_in(c(4, 5, 7, 8)) ~ 'NoGrave'
+  ))
+  
+# agente + paso peatones + semáforo + stop -> Grave
+# 
+# ninguna + otra señal + ceda + marcas viales -> NoGrave
+  
+  table(prioridad_regulara_por)
+  
+  prioridad_regulara_por <- relevel(prioridad_regulara_por, ref = "Ninguna")
+  df$Prioridad_Regulada_por <- prioridad_regulara_por
+  
+  ###################################################################################################################
+  
+  df$Luminosidad <- as.factor(ifelse(df$Luminosidad == "Pleno dia" | df$Luminosidad == "Sin iluminacion", "TipoA", "TipoB"))
+  
+  ###################################################################################################################
+  
+  df$Senalizacion_Peligro <- as.factor(ifelse(df$Senalizacion_Peligro == "Innecesaria", "TipoA",  "TipoB"))
+  
+  ###################################################################################################################
+  
+  df$Visibilidad_Senalizacion_Vertical <- as.factor(ifelse(df$Visibilidad_Senalizacion_Vertical == "Deficiente" | df$Visibilidad_Senalizacion_Vertical == "Nula", "TipoA",  "TipoB"))
+  
+  ###################################################################################################################
+  
+  otras_circunstancias <- as.factor(case_when(
+      df$Otras_Circunstancias %>% is_in(c(1, 11, 9, 3, 7, 4)) ~ 'Grave',
+      df$Otras_Circunstancias %>% is_in(c(14, 8, 13, 5)) ~ 'Neutro',
+      df$Otras_Circunstancias %>% is_in(c(6, 2, 12, 10)) ~ 'NoGrave'
+  ))
+  
+#   paso a nivel + peralte + Baches + Cambio de rasante + Escalon + Fuerte descenso -> Grave
+# 	Ninguna + Obras + Otra + Tramo deslizante senalizado -> Neutra
+# 	Baden + Estrechamiento + Fin carril lento + Inundacion
+  
+  table(otras_circunstancias)
+  
+  otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
+  df$Otras_Circunstancias <- otras_circunstancias
+  
+  ###################################################################################################################
+  
+    df$Fuera_o_Interseccion <- as.factor(ifelse(df$Fuera_o_Interseccion == "Recta" | df$Fuera_o_Interseccion == "Curva fuerte sin senal" | df$Fuera_o_Interseccion == "Curva suave" | df$Fuera_o_Interseccion == "Interseccion con carretera", "TipoA", "TipoB"))
+  
+  ###################################################################################################################
+  
+  df$Tipo_Est <- as.factor(ifelse(df$Tipo_Est == "Cob", "TipoA", "TipoB"))
   
   ###################################################################################################################
   
@@ -732,7 +813,8 @@ xda::numSummary(df.train)
 xda::charSummary(df.train)
 ```
 
-#Anchura calzada
+# Miramos si las categóricas son significativas o no
+## Anchura calzada
 
 ```{r}
 tabla <- table(df.train$Anchura_Calzada,df.train$Gravedad)
@@ -743,4 +825,210 @@ mtab1 <- mtab %>% group_by(Anchura_Calzada, Gravedad) %>%   summarise (n=sum(val
 mtab$freq <- mtab1$freq
 mtab
 ```
+
+
+## Arcen_Pavimentado
+
+```{r}
+tabla <- table(df.train$Arcen_Pavimentado,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Arcen_Pavimentado")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Arcen_Pavimentado", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Arcen_Pavimentado, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Arcen_Pavimentado)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por arcen pavimentado y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Arcen_Pavimentado),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+## Captafaros
+
+```{r}
+tabla <- table(df.train$Captafaros,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Captafaros")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Captafaros", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Captafaros, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Captafaros)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Captafaros y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Captafaros),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+## Superficie
+
+```{r}
+tabla <- table(df.train$Superficie,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Superficie")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Superficie", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Superficie, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Superficie)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Superficie y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Superficie),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+## Luminosidad
+
+```{r}
+tabla <- table(df.train$Luminosidad,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Luminosidad")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Luminosidad", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Luminosidad, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Luminosidad)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Luminosidad y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Luminosidad),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+## Aceras
+```{r}
+tabla <- table(df.train$Aceras,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Aceras")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Aceras", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Aceras, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Aceras)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Aceras y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Aceras),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+#Visibilidad_Senalizacion_Vertical
+```{r}
+tabla <- table(df.train$Visibilidad_Senalizacion_Vertical,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Visibilidad_Senalizacion_Vertical")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Visibilidad_Senalizacion_Vertical", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Visibilidad_Senalizacion_Vertical, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Visibilidad_Senalizacion_Vertical)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Visibilidad_Senalizacion_Vertical y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Visibilidad_Senalizacion_Vertical),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+#Inexperiencia_Conductor
+```{r}
+tabla <- table(df.train$Inexperiencia_Conductor,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Inexperiencia_Conductor")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Inexperiencia_Conductor", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Inexperiencia_Conductor, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Inexperiencia_Conductor)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Inexperiencia_Conductor y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Inexperiencia_Conductor),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+#Cansancio_Sueno
+```{r}
+tabla <- table(df.train$Cansancio_Sueno,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Cansancio_Sueno")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Cansancio_Sueno", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Cansancio_Sueno, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Cansancio_Sueno)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Cansancio_Sueno y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Cansancio_Sueno),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+#Infraccion_Norma_Circulacion
+```{r}
+tabla <- table(df.train$Infraccion_Norma_Circulacion,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Infraccion_Norma_Circulacion")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Infraccion_Norma_Circulacion", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Infraccion_Norma_Circulacion, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Infraccion_Norma_Circulacion)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Infraccion_Norma_Circulacion y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Infraccion_Norma_Circulacion),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+##Circular_Sentido_Contrario
+```{r}
+tabla <- table(df.train$Circular_Sentido_Contrario,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Circular_Sentido_Contrario")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Circular_Sentido_Contrario", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Circular_Sentido_Contrario, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Circular_Sentido_Contrario)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Circular_Sentido_Contrario y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Circular_Sentido_Contrario),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+##Fuera_o_Interseccion
+
+```{r}
+tabla <- table(df.train$Fuera_o_Interseccion,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Fuera_o_Interseccion")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Fuera_o_Interseccion", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Fuera_o_Interseccion, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Fuera_o_Interseccion y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+
 
