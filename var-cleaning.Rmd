@@ -12,6 +12,7 @@ library(RDIDQ)
 library(StatMeasures)
 library(datacheck)
 library(knitr)
+library(reshape2)
 ```
 
 #Limpiamos los datos
@@ -20,7 +21,7 @@ library(knitr)
 df.train <- read.csv('./traindata.csv', na.strings = c("NaN")) 
 df.test <- read.csv('./testdata.csv', na.strings = c("NaN"))
 
-clean_data <- function(df, test=FALSE) {
+clean_data <- function(df, test) {
   ano <- as.factor(ifelse(df$Ano==1,"2005",
                                    ifelse(df$Ano==2,"2006",
                                           ifelse(df$Ano==3,"2007",
@@ -671,6 +672,16 @@ clean_data <- function(df, test=FALSE) {
   
   df$Timestamp <- timestamp  
   
+  ###################################################################################################################
+  
+  df$hora_cat <- as.factor(ifelse(as.numeric(df$Hora_Real) %in% c(2, 3, 10, 11, 12, 13, 14, 17, 20), "Hora_grave", "Hora_leve"))
+
+#####################################################################################################################
+
+  df$Tipo_Via_cat <- as.factor(ifelse(df$Tipo_Via == "Via convencional sin carril lento", "Conv rapida", ifelse(df$Tipo_Via == "Autovia", "Autovia", "Resto")))
+  
+  ###################################################################################################################
+  
   return(df)
 }
 
@@ -679,7 +690,7 @@ clean_data <- function(df, test=FALSE) {
 
 # Guardamos en un csv los datos limpiados
 ```{r}
-df.train <- clean_data(df.train)
+df.train <- clean_data(df.train, test=FALSE)
 df.test <- clean_data(df.test, test=TRUE)
 
 write.csv(df.train, "./cleaned_train.csv", row.names = T)
