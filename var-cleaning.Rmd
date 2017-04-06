@@ -1018,25 +1018,6 @@ ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
   geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
 ```
 
-##Fuera_o_Interseccion
-
-```{r}
-tabla <- table(df.train$Fuera_o_Interseccion,df.train$Gravedad)
-mtab <- melt(tabla, id.vars="Fuera_o_Interseccion")
-mtab$Var1 <- as.factor(mtab$Var1)
-colnames(mtab) <- c("Fuera_o_Interseccion", "Gravedad", "value")
-mtab1 <- mtab %>% group_by(Fuera_o_Interseccion, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
-mtab$freq <- mtab1$freq
-mtab
-
-ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
-  geom_bar(stat="identity", position="dodge", width = 10 ) +
-  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Fuera_o_Interseccion y gravedad") +         
-  theme(axis.line=element_blank(),axis.text.x=element_blank(),
-        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
-  geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
-```
-
 
 # Quitamos variables
 
