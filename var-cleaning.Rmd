@@ -66,7 +66,6 @@ clean_data <- function(df, test) {
                             )
                     )
   
-  table(dia_semana)
   
   dia_semana <- relevel(dia_semana, ref = "Domingo")
   df$Dia_Semana <- dia_semana
@@ -75,7 +74,6 @@ clean_data <- function(df, test) {
   
   tipo_dia <- as.factor(ifelse(df$Tipo_Dia == 1, "Laborable", ifelse(df$Tipo_Dia == 2, "Vispera Festivo", ifelse(df$Tipo_Dia == 3, "Festivo", ifelse(df$Tipo_Dia == 4, "Puente", NA)))))
   
-  table(tipo_dia)
   
   tipo_dia <- relevel(tipo_dia, ref = "Laborable")
   df$Tipo_Dia <- tipo_dia
@@ -84,7 +82,6 @@ clean_data <- function(df, test) {
   
   aceras <- as.factor(ifelse(df$Aceras == 1, "Si", ifelse(df$Aceras == 2,"No", NA)))
   
-  table(aceras)
   
   aceras <- relevel(aceras, ref = "Si")
   df$Aceras <- aceras
@@ -421,39 +418,39 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  otras_circunstancias <- as.factor(ifelse(df$Otras_Circunstancias == 1, "Paso a nivel", 
-                                        ifelse(df$Otras_Circunstancias == 2, "Estrechamiento",
-                                               ifelse(df$Otras_Circunstancias == 3, "Camino de rasante",
-                                                      ifelse(df$Otras_Circunstancias == 4, "Fuerte descenso",
-                                                             ifelse(df$Otras_Circunstancias == 5, "Tramo deslizante senalizado",
-                                                                    ifelse(df$Otras_Circunstancias == 6, "Baden",
-                                                                           ifelse(df$Otras_Circunstancias == 7, "Escalon", 
-                                                                                  ifelse(df$Otras_Circunstancias == 8, "Obras", 
-                                                                                         ifelse(df$Otras_Circunstancias == 9, "Baches",
-                                                                                                ifelse(df$Otras_Circunstancias == 10, "Inundacion",
-                                                                                                       ifelse(df$Otras_Circunstancias == 11, "Peralte invertido",
-                                                                                                              ifelse(df$Otras_Circunstancias == 12, "Fin carril lento",
-                                                                                                                     ifelse(df$Otras_Circunstancias == 13, "Otra",
-                                                                                                                            ifelse(df$Otras_Circunstancias == 14, "Ninguna", NA)
-                                                                    )
-                                                             )
-                                                      )
-                                               )
-                                        )
-  )
-  )
-  )
-  )
-  )
-  )
-  )
-  )
-  )
-  
-  table(otras_circunstancias)
-  
-  otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
-  df$Otras_Circunstancias <- otras_circunstancias
+  # otras_circunstancias <- as.factor(ifelse(df$Otras_Circunstancias == 1, "Paso a nivel", 
+  #                                       ifelse(df$Otras_Circunstancias == 2, "Estrechamiento",
+  #                                              ifelse(df$Otras_Circunstancias == 3, "Camino de rasante",
+  #                                                     ifelse(df$Otras_Circunstancias == 4, "Fuerte descenso",
+  #                                                            ifelse(df$Otras_Circunstancias == 5, "Tramo deslizante senalizado",
+  #                                                                   ifelse(df$Otras_Circunstancias == 6, "Baden",
+  #                                                                          ifelse(df$Otras_Circunstancias == 7, "Escalon", 
+  #                                                                                 ifelse(df$Otras_Circunstancias == 8, "Obras", 
+  #                                                                                        ifelse(df$Otras_Circunstancias == 9, "Baches",
+  #                                                                                               ifelse(df$Otras_Circunstancias == 10, "Inundacion",
+  #                                                                                                      ifelse(df$Otras_Circunstancias == 11, "Peralte invertido",
+  #                                                                                                             ifelse(df$Otras_Circunstancias == 12, "Fin carril lento",
+  #                                                                                                                    ifelse(df$Otras_Circunstancias == 13, "Otra",
+  #                                                                                                                           ifelse(df$Otras_Circunstancias == 14, "Ninguna", NA)
+  #                                                                   )
+  #                                                            )
+  #                                                     )
+  #                                              )
+  #                                       )
+  # )
+  # )
+  # )
+  # )
+  # )
+  # )
+  # )
+  # )
+  # )
+  # 
+  # table(otras_circunstancias)
+  # 
+  # otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
+  # df$Otras_Circunstancias <- otras_circunstancias
   
   ###################################################################################################################
   
@@ -514,7 +511,7 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  sentido <- as.factor(ifelse(df$Sentido == 1, "Ascendente", ifelse(df$Sentido == 2,"Descendente", "Plano")))
+  sentido <- as.factor(ifelse(df$Sentido == 0, "Ascendente", ifelse(df$Sentido == 1,"Descendente", NA)))
   
   table(sentido)
   
@@ -678,7 +675,7 @@ clean_data <- function(df, test) {
 
 #####################################################################################################################
 
-  df$Tipo_Via <- as.factor(ifelse(df$Tipo_Via == "Via convencional sin carril lento", "Conv rapida", ifelse(df$Tipo_Via == "Autovia", "Autovia", "Resto")))
+  df$Tipo_Via <- as.factor(ifelse(df$Tipo_Via == "Via convencional sin carril lento", "Conv rapida", ifelse(df$Tipo_Via == "Autovia" | df$Tipo_Via == "Via rapida", "Autovia", "Resto")))
   
   ###################################################################################################################
   
@@ -689,18 +686,16 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  df$Arcen <- as.factor(ifelse(df$Arcen == "Inexistente" | df$Arcen == "menor_1.5", "Estrecho", "Ancho"))
+  df$Arcen <- as.factor(ifelse(df$Arcen == "Inexistente" | df$Arcen == "entre_1.5_y_2.5", "TipoB", ifelse(df$Arcen=="mayor_2.5", "TipoC","TipoA")))
   
   ###################################################################################################################
   
   tipo_dia <- as.factor(case_when(
-                df$Tipo_Dia %>% is_in(c(1, 4)) ~ 'NoGrave',
-                df$Tipo_Dia %>% is_in(c(2, 3)) ~ 'Grave'
+                df$Tipo_Dia %>% is_in(c("Laborable", "Puente")) ~ 'TipoA',
+                df$Tipo_Dia %>% is_in(c("Vispera Festivo", "Festivo")) ~ 'TipoB'
   ))
-
-  table(tipo_dia)
   
-  tipo_dia <- relevel(tipo_dia, ref = "NoGrave")
+  tipo_dia <- relevel(tipo_dia, ref = "TipoA")
   df$Tipo_Dia <- tipo_dia
   
   ###################################################################################################################
@@ -709,27 +704,15 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  df$Superficie <- as.factor(ifelse(df$Superficie == "Seca y limpia" | df$Superficie == "Aceite" | df$Superficie == "Otro", "TipoA", ifelse(df$Superficie == "Umbria" | df$Superficie == "Gravilla suelta" | df$Superficie == "Nevada", "TipoB", "TipoC")))
+  df$Superficie <- as.factor(ifelse(df$Superficie == "Seca y limpia" | df$Superficie == "Aceite" | df$Superficie == "Otro" | df$Superficie == "Mojada", "TipoA", ifelse(df$Superficie == "Umbria" | df$Superficie == "Gravilla suelta" | df$Superficie == "Nevada", "TipoB", "TipoC")))
   
   ###################################################################################################################
   
-  df$Interseccion_Acondicionamiento <- as.factor(ifelse(df$Interseccion_Acondicionamiento == "Carril central de espera" | df$Interseccion_Acondicionamiento == "Senal de giro izquierda", "TipoA", "TipoB"))
+  df$Interseccion_Acondicionamiento <- as.factor(ifelse(df$Interseccion_Acondicionamiento == "Carril central de espera" | df$Interseccion_Acondicionamiento == "Senal de giro izquiera", "TipoA", "TipoB"))
   
   ###################################################################################################################
   
-  prioridad_regulara_por <- as.factor(case_when(
-                                    df$Prioridad_Regulada_por %>% is_in(c(1, 2, 3, 6)) ~ 'Grave',
-                                    df$Prioridad_Regulada_por %>% is_in(c(4, 5, 7, 8)) ~ 'NoGrave'
-  ))
-  
-# agente + paso peatones + semáforo + stop -> Grave
-# 
-# ninguna + otra señal + ceda + marcas viales -> NoGrave
-  
-  table(prioridad_regulara_por)
-  
-  prioridad_regulara_por <- relevel(prioridad_regulara_por, ref = "Ninguna")
-  df$Prioridad_Regulada_por <- prioridad_regulara_por
+  df$Prioridad_Regulada_por <- as.factor(ifelse(df$Prioridad_Regulada_por == "Ninguna" | df$Prioridad_Regulada_por == "Otra senal" | df$Prioridad_Regulada_por=="Senal ceda el paso" | df$Prioridad_Regulada_por == "Solo marcas viales","TipoA", "TipoB"))
   
   ###################################################################################################################
   
@@ -745,11 +728,12 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  otras_circunstancias <- as.factor(case_when(
-      df$Otras_Circunstancias %>% is_in(c(1, 11, 9, 3, 7, 4)) ~ 'Grave',
-      df$Otras_Circunstancias %>% is_in(c(14, 8, 13, 5)) ~ 'Neutro',
-      df$Otras_Circunstancias %>% is_in(c(6, 2, 12, 10)) ~ 'NoGrave'
-  ))
+otras_circunstancias <- as.factor(case_when(
+                    df$Otras_Circunstancias %>% is_in(c(1, 11, 9, 3, 7, 4)) ~ 'Grave',
+                    df$Otras_Circunstancias %>% is_in(c(14, 8, 13, 5)) ~ 'Neutro',
+                    df$Otras_Circunstancias %>% is_in(c(6, 2, 12, 10)) ~ 'NoGrave'
+    
+))
   
 #   paso a nivel + peralte + Baches + Cambio de rasante + Escalon + Fuerte descenso -> Grave
 # 	Ninguna + Obras + Otra + Tramo deslizante senalizado -> Neutra
@@ -757,7 +741,7 @@ clean_data <- function(df, test) {
   
   table(otras_circunstancias)
   
-  otras_circunstancias <- relevel(otras_circunstancias, ref = "Ninguna")
+  otras_circunstancias <- relevel(otras_circunstancias, ref = "Neutro")
   df$Otras_Circunstancias <- otras_circunstancias
   
   ###################################################################################################################
@@ -767,6 +751,10 @@ clean_data <- function(df, test) {
   ###################################################################################################################
   
   df$Tipo_Est <- as.factor(ifelse(df$Tipo_Est == "Cob", "TipoA", "TipoB"))
+  
+  ###################################################################################################################
+  
+  df$Arboles <- as.factor(ifelse(df$Arboles == "2", "TipoA", "TipoB"))
   
   ###################################################################################################################
   
@@ -1030,5 +1018,34 @@ ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
   geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
 ```
 
+##Fuera_o_Interseccion
 
+```{r}
+tabla <- table(df.train$Fuera_o_Interseccion,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Fuera_o_Interseccion")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Fuera_o_Interseccion", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Fuera_o_Interseccion, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+
+ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
+  geom_bar(stat="identity", position="dodge", width = 10 ) +
+  facet_wrap(~Gravedad, scales = "free_y")  + scale_y_continuous(name="Número de casos") +   ggtitle("Número de caso por Fuera_o_Interseccion y gravedad") +         
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.ticks=element_blank(), axis.title.x=element_blank()) + 
+  geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
+```
+
+
+# Quitamos variables
+
+```{r}
+select_data <- function(df) {
+    df <- df[,-match(c("Arboles_Metros_Calzada", "Colision_Vehiculo_Obstaculo_1", "Colision_Vehiculo_Obstaculo_2", "Atropello_1", "Atropello_2", "Vuelco_1", "Vuelco_2", "Salida_Sin_Colision", "Otro", "Visibilidad_Restringida_por", "Colision_Vehiculos_Marcha", "Salida_Con_Colision", "Lado_Salida", "Dia", "Dia_Semana", "Marcas_Viales", "Arcen_Pavimentado", "Circulacion", "Circulacion_Medidas_Especiales", "Inexperiencia_Conductor", "Tramo_Obras", "Otro_Factor", "Arboles", "Curvatura", "Peralte", "GPS_x", "GPS_y", "GPS_z", "IMD", "Zona", "Marcas_Viales", "Distraccion", "Hitos_Arista", "Tipo_Est", "Pendiente", "Curvatura", "Peralte", "Provincia", "Dia_Semana", "Carretera", "Anchura_Calzada", "Arcen", "Barrera_Seguridad", "Paneles_Direccionales", "Captafaros", "Otras_Circunstancias", "Aceras", "Alcohol_Drogas", "Estado_Condicion_Senalizacion", "Fuera_o_Interseccion"),colnames(df))]
+}
+
+df.train <- select_data(df.train)
+df.test <- select_data(df.test)
+```
 
