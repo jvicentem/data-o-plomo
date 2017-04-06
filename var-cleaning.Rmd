@@ -20,7 +20,7 @@ library(knitr)
 df.train <- read.csv('./traindata.csv', na.strings = c("NaN")) 
 df.test <- read.csv('./testdata.csv', na.strings = c("NaN"))
 
-clean_data <- function(df) {
+clean_data <- function(df, test=FALSE) {
   ano <- as.factor(ifelse(df$Ano==1,"2005",
                                    ifelse(df$Ano==2,"2006",
                                           ifelse(df$Ano==3,"2007",
@@ -655,8 +655,10 @@ clean_data <- function(df) {
   
   ###################################################################################################################
   
-  gravedad <- as.factor(ifelse(df$N_Muertos == 0 & df$N_Graves == 0 & df$N_Leves == 0,"No", "Si"))
-  df$Gravedad <- gravedad
+  if (!test) {
+    gravedad <- as.factor(ifelse(df$N_Muertos == 0 & df$N_Graves == 0 & df$N_Leves == 0,"No", "Si"))
+    df$Gravedad <- gravedad    
+  }
   
   ###################################################################################################################
   
@@ -678,7 +680,7 @@ clean_data <- function(df) {
 # Guardamos en un csv los datos limpiados
 ```{r}
 df.train <- clean_data(df.train)
-df.test <- clean_data(df.test)
+df.test <- clean_data(df.test, test=TRUE)
 
 write.csv(df.train, "./cleaned_train.csv", row.names = T)
 write.csv(df.test, "./cleaned_test.csv", row.names = T)
