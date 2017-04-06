@@ -100,7 +100,7 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada==1, "mayor_6", 
+  anchura_calzada <- as.factor(ifelse(df$Anchura_Calzada==1, "menor_6", 
                                 ifelse(df$Anchura_Calzada==2, "entre_6_y_7", ifelse(df$Anchura_Calzada==3, "mayor_7", NA))))
   
   table(anchura_calzada)
@@ -514,7 +514,7 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
-  sentido <- as.factor(ifelse(df$Sentido == 1, "Ascendente", ifelse(df$Sentido == 2,"Descendente", NA)))
+  sentido <- as.factor(ifelse(df$Sentido == 1, "Ascendente", ifelse(df$Sentido == 2,"Descendente", "Plano")))
   
   table(sentido)
   
@@ -682,6 +682,13 @@ clean_data <- function(df, test) {
   
   ###################################################################################################################
   
+  df$Anchura_Calzada_cat <- as.factor(ifelse(df$Anchura_Calzada == "mayor_7", "mayor_7", "menor_7"))
+                                           ###################################################################################################################
+  
+  df$Anchura_Carril_cat <- as.factor(ifelse(df$Anchura_Carril == "entre_3.25_y_3.75", "Correcta", "NoCorrecta"))
+  
+  ###################################################################################################################
+  
   return(df)
 }
 
@@ -725,6 +732,15 @@ xda::numSummary(df.train)
 xda::charSummary(df.train)
 ```
 
-### ¿Hacer categoría de franja del día (6-10, 10-13, 13-15, 15-17, 17-20, 20-12, 12-6)
-### Categoría franja horaria: 
+#Anchura calzada
+
+```{r}
+tabla <- table(df.train$Anchura_Calzada,df.train$Gravedad)
+mtab <- melt(tabla, id.vars="Anchura_Calzada")
+mtab$Var1 <- as.factor(mtab$Var1)
+colnames(mtab) <- c("Anchura_Calzada", "Gravedad", "value")
+mtab1 <- mtab %>% group_by(Anchura_Calzada, Gravedad) %>%   summarise (n=sum(value)) %>% mutate(freq = round(n / sum(n)*100,2)) %>% arrange(Gravedad)
+mtab$freq <- mtab1$freq
+mtab
+```
 
