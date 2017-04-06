@@ -1,0 +1,7 @@
+Id, Ano, Numero_Accidente, Provincia, Mes, Dia, Hora, Dia_Semana, Tipo_Dia, Vehiculos_Implicados, Carretera, Pk, Km, Hm, Sentido, Zona, Tipo_Via, Anchura_Calzada, Anchura_Carril, Marcas_Viales, Arcen, Arcen_Pavimentado, Mediana, Barrera_Seguridad, Paneles_Direccionales, Hitos_Arista, Captafaros, Interseccion_Tipo, Interseccion_Acondicionamiento, Prioridad_Regulada_por, Superficie, Luminosidad, Factores_Atmosfericos, Otras_Circunstancias, Senalizacion_Peligro, Aceras, Arboles, Visibilidad_Senalizacion_Vertical, Colision_Vehiculos_Marcha, Salida_Con_Colision, Lado_Salida, Circulacion, Circulacion_Medidas_Especiales, Distraccion, Inexperiencia_Conductor, Alcohol_Drogas, Cansancio_Sueno, Enfermedad, Velocidad_Inadecuada, Infraccion_Norma_Circulacion, Estado_Condicion_Via, Estado_Condicion_Senalizacion, Tramo_Obras, Mal_Estado_Vehiculo, Averia_Mecanica, Meteorologia_Adversa, Irrupcion_Animal, Circular_Sentido_Contrario, Otro_Factor, Sin_Opinion_Definida, Pendiente, Curvatura, Peralte, GPS_x, GPS_y, GPS_z, Tipo_Est, IMD, N_Muertos, N_Graves, N_Leves, Hora_Real, Fuera_o_Interseccion, Gravedad, Timestamp
+
+
+
+
+
+Arboles_Metros_Calzada, Colision_Vehiculo_Obstaculo_1, Colision_Vehiculo_Obstaculo_2, Atropello_1, Atropello_2, Vuelco_1, Vuelco_2, Salida_Sin_Colision, Otro, Visibilidad_Restringida_por, Colision_Vehiculos_Marcha, Salida_Con_Colision, Lado_Salida, Dia, Dia_Semana, marcas_Viales, arcen_pavimentado, circulacion, circulacion_medidas_especiales, inexperiencia_conductor, tramo_obras, otro_factor

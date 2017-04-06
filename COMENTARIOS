@@ -1,0 +1,28 @@
+Var horario_gravedad -> gravedad > 55% -> Horario grave
+			gravedad < 55% -> Horario no grave
+
+
+
+var zona -> zona urbana? Porcentaje alto gravedad pocos casos -> SE ELIMINA
+
+
+var Mes -> factorizar y crear 2 levels -> Octubre-Marzo // Abril-Septiembre
+
+var Ano -> Ojo a 2005!
+
+var interseccion_tipo -> se agrupan los levels
+
+var prioridad_regulada_por -> se agrupan los levels
+
+var Otras_circunstancias -> se agrupan los levels
+	
+var Enfermedad -> niveles al revés??
+
+var velocidad_inadecuada -> niveles al revés??
+
+
+
+
+
+
+
