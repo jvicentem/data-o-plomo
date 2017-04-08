@@ -1,4 +1,11 @@
 ---
+title: "Data_O_Plomo_AWS"
+author: "Data O Plomo"
+date: "8 de abril de 2017"
+output: html_document
+---
+
+---
 title: "DATATON URJC 2017"
 author: "Data O Plomo"
 date: "7 de abril de 2017"
@@ -23,8 +30,6 @@ library(doMC)
 ```{r, echo=FALSE, include=FALSE,}
 df.train <- read.csv('./traindata.csv', na.strings = NA)
 df.test <- read.csv('./testdata.csv', na.strings = c("NaN"))
-
-names(df.train[nearZeroVar(df.train)])
 ```
 
 ```{r, echo=FALSE, include=FALSE,}
@@ -1030,7 +1035,6 @@ ggplot(mtab, aes(Gravedad,value, fill = Fuera_o_Interseccion)) +
   geom_text(aes(x=, y = value*0.75,label = freq,  group = Fuera_o_Interseccion),position= position_dodge(width=10), vjust=-0.2, color="black")
 ```
 
-
 # Quitamos variables
 
 ```{r}
@@ -1045,9 +1049,6 @@ select_data <- function(df) {
     df <- df[,-match(c("Arboles_Metros_Calzada", "Colision_Vehiculo_Obstaculo_1", "Colision_Vehiculo_Obstaculo_2", "Atropello_1", "Atropello_2", "Vuelco_1", "Vuelco_2", "Salida_Sin_Colision", "Otro", "Visibilidad_Restringida_por", "Colision_Vehiculos_Marcha", "Salida_Con_Colision", "Lado_Salida", "Dia", "Dia_Semana", "Arcen_Pavimentado", "Circulacion", "Circulacion_Medidas_Especiales", "Inexperiencia_Conductor", "Tramo_Obras", "Otro_Factor", "Arboles", "Curvatura", "Peralte", "GPS_x", "GPS_y", "GPS_z", "IMD", "Zona", "Marcas_Viales", "Distraccion", "Hitos_Arista", "Tipo_Est", "Pendiente", "Curvatura", "Peralte", "Provincia", "Dia_Semana", "Carretera", "Anchura_Calzada", "Arcen", "Barrera_Seguridad", "Paneles_Direccionales", "Captafaros", "Otras_Circunstancias", "Aceras", "Alcohol_Drogas", "Estado_Condicion_Senalizacion", "Fuera_o_Interseccion", "Hora", "Hm", "Interseccion_Acondicionamiento", "Tipo_Via", "Numero_Accidente", "Cansancio_Sueno", "Enfermedad", "Estado_Condicion_Via", "Mal_Estado_Vehiculo", "Averia_Mecanica", "Meteorologia_Adversa", "Irrupcion_Animal", "Circular_Sentido_Contrario", "Sin_Opinion_Definida"),colnames(df))]
 }
 
-gravedad <- as.factor(ifelse(df.train$N_Muertos == 0 & df.train$N_Graves == 0 & df.train$N_Leves == 0, 0, 1))
-df.train['Gravedad'] <- gravedad
-
 df.train <- select_data(df.train)
 df.test <- select_data(df.test)
 ```
@@ -1060,8 +1061,7 @@ df.test <- select_data(df.test)
 # corrplot(cor(x = df.train[sapply(df.train,is.numeric)]), diag = FALSE)
 
 # Preparación de df.train eliminando variables y NAs
-# df.train <- df.train %>% select(-Id, -Timestamp, -N_Leves, -N_Graves, -N_Muertos)
-df.train <- df.train %>% select(-Id, -N_Leves, -N_Graves, -N_Muertos)
+df.train <- df.train %>% select(-Id, -Timestamp, -N_Leves, -N_Graves, -N_Muertos)
 df.train <- df.train %>% na.omit()
 
 df.train.Part <- df.train
@@ -1071,7 +1071,7 @@ df.train.Part <- df.train
 
 ```{r}
 set.seed(96)
-data.partition <- createDataPartition(df.train.Part$Gravedad == 1, 0.70)
+data.partition <- createDataPartition(df.train.Part$Gravedad == 1, p = 0.70)
 training <- df.train[data.partition$Resample1,]
 testing <- df.train[-data.partition$Resample1,]
 
@@ -1079,14 +1079,15 @@ training %>% group_by(Gravedad) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count))
 
-# Total de casos -> 2482 (si) + 2083 (no) = 4565
-# Queremos que los SI correspondan a un 73% de la muestra -> Los NO deberían ser 918 casos
-# Queremos que los SI correspondan a un 70% de la muestra -> Los NO deberían ser 1064 casos
-# Queremos que los SI correspondan a un 65% de la muestra -> Los NO deberían ser 1336 casos
+# Total de casos -> 3475 (si) + 2917 (no) = 6392
+# Queremos que los SI correspondan a un 73% de la muestra -> Los NO deberían ser 1285 casos
+# Queremos que los SI correspondan a un 70% de la muestra -> Los NO deberían ser 1489 casos
+# Queremos que los SI correspondan a un 65% de la muestra -> Los NO deberían ser 1871 casos
 
-# Queremos que los NO correspondan a un 27% de la muestra -> Los SI deberían ser 5632 casos (incrementar en 3150)
-# Queremos que los NO correspondan a un 30% de la muestra -> Los SI deberían ser 4860 casos (incrementar en 2378)
-# Queremos que los NO correspondan a un 35% de la muestra -> Los SI deberían ser 3868 casos (incrementar en 1386)
+# Queremos que los NO correspondan a un 27% de la muestra -> Los SI deberían ser 7887 casos (incrementar en 4412)
+# Queremos que los NO correspondan a un 30% de la muestra -> Los SI deberían ser 6806 casos (incrementar en 3331)
+# Queremos que los NO correspondan a un 35% de la muestra -> Los SI deberían ser 5417 casos (incrementar en 1942)
+# Queremos que los NO correspondan a un 40% de la muestra -> Los SI deberían ser 4375 casos (incrementar en 1000)
 
 training.yes <- training %>% filter(Gravedad == 1)
 training.no <- training %>% filter(Gravedad == 0)
@@ -1098,7 +1099,7 @@ set.seed(97)
 # training <- rbind(training.yes, training.no.reduced)
 
 # Up-sampling
-indices_train = sample(rownames(training.yes), 1386, replace = TRUE)
+indices_train = sample(rownames(training.yes), 1942, replace = TRUE)
 training.yes.amplified <- training.yes[indices_train,]
 training.yes <- rbind(training.yes, training.yes.amplified)
 training <- rbind(training.yes, training.no)
@@ -1117,40 +1118,52 @@ registerDoMC(cores = 8)
 # Parámetros y generación de modelos
 # train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allowParallel = TRUE, sampling = 'smote')
 train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allowParallel = TRUE)
-model <- train(Gravedad ~ ., data=training, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree=500, na.action = na.omit)
 
-model <- train(Gravedad ~ ., data=training, trControl=train_control, method="adaboost", importance=T, preProcess=c('scale', 'center'), nIter=5, na.action = na.omit)
 
-# model_1 <- train(Gravedad ~ ., data=training, trControl=train_control,method="svmLinearWeights2", importance=T, preProcess=c('scale', 'center'),weight=1, na.action = na.omit)
-# model_0.5 <- train(Gravedad ~ .,data=training,trControl=train_control,method="svmLinearWeights2", importance=T, preProcess=c('scale', 'center'),weight=0.5, na.action = na.omit)
-# model_0 <- train(Gravedad ~ .,data=training,trControl=train_control,method="svmLinearWeights2", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
+model_nnet <- train(Gravedad ~ ., data=training, trControl=train_control, method="nnet", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
 
-model$finalModel
 
-modelLookup('parRF')
-modelLookup('ranger')
-modelLookup('adaboost')
-modelLookup('AdaBoost.M1')
-modelLookup('ada') # Falla por NA
-modelLookup('pda') # Falla por NA
-modelLookup('pda2') # Falla por NA
-modelLookup('PenalizedLDA') # Falla por NA
-modelLookup('plr') # Falla por NA
-modelLookup('multinom') # Falla por NA
-modelLookup('ordinalNet') # Falla por NA
-modelLookup('svmLinearWeights2')
-modelLookup('svmLinearWeights')
-modelLookup('RRF')
-modelLookup('LogitBoost')
-modelLookup('deepboost')
-modelLookup('')
-modelLookup('')
 
-summary(model)
-confusionMatrix(predict(model, testing), testing$Gravedad, positive="1")
-confusionMatrix(predict(model_1, testing), testing$Gravedad, positive="1")
-confusionMatrix(predict(model_0.5, testing), testing$Gravedad, positive="1")
-confusionMatrix(predict(model_0, testing), testing$Gravedad, positive="1")
+model_parRF <- train(Gravedad ~ ., data=training, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree=500, na.action = na.omit)
+model_ranger <- train(Gravedad ~ ., data=training, trControl=train_control,method="ranger", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
+model_RRF <- train(Gravedad ~ .,data=training,trControl=train_control,method="RRF", importance=T, preProcess=c('scale', 'center'),na.action = na.omit)
+
+
+
+model_adaboost <- train(Gravedad ~ ., data=training, trControl=train_control, method="adaboost", importance=T, preProcess=c('scale', 'center'), nIter=5, na.action = na.omit)
+model_AdaBoost.M1 <- train(Gravedad ~ .,data=training,trControl=train_control,method="AdaBoost.M1", importance=T, preProcess=c('scale', 'center'),weight=0.5, na.action = na.omit)
+
+
+
+model_svmLinearWeights2 <- train(Gravedad ~ ., data=training, trControl=train_control, method="svmLinearWeights2", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
+model_svmLinearWeights <- train(Gravedad ~ .,data=training,trControl=train_control,method="svmLinearWeights", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
+
+
+
+model_LogitBoost <- train(Gravedad ~ .,data=training,trControl=train_control,method="LogitBoost", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
+model_deepboost <- train(Gravedad ~ .,data=training,trControl=train_control,method="deepboost", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
+model_blackboost <- train(Gravedad ~ .,data=training,trControl=train_control,method="blackboost", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
+
+# model$finalModel
+# 
+# modelLookup('ada') # Falla por NA
+# modelLookup('pda') # Falla por NA
+# modelLookup('pda2') # Falla por NA
+# modelLookup('PenalizedLDA') # Falla por NA
+# modelLookup('plr') # Falla por NA
+# modelLookup('multinom') # Falla por NA
+# modelLookup('ordinalNet') # Falla por NA
+# modelLookup('svmLinearWeights2')
+# modelLookup('svmLinearWeights')
+# modelLookup('RRF')
+# modelLookup('LogitBoost')
+# modelLookup('deepboost')
+
+# summary(model)
+# confusionMatrix(predict(model, testing), testing$Gravedad, positive="1")
+# confusionMatrix(predict(model_1, testing), testing$Gravedad, positive="1")
+# confusionMatrix(predict(model_0.5, testing), testing$Gravedad, positive="1")
+# confusionMatrix(predict(model_0, testing), testing$Gravedad, positive="1")
 ```
 
 # Predicción de datos de test
@@ -1169,12 +1182,22 @@ test_model <- function(model) {
     )
 }
 
-test_model(model)
-test_model(model_1)
-test_model(model_0.5)
-test_model(model_0)
+test_model(model_nnet)
 
+test_model(model_parRF)
+test_model(model_ranger)
+test_model(model_RRF)
 
-file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
-write.csv(df.result, file = file, row.names = FALSE)
+test_model(model_adaboost)
+test_model(model_AdaBoost.M1)
+
+test_model(model_svmLinearWeights2)
+test_model(model_svmLinearWeights)
+
+test_model(model_LogitBoost)
+test_model(model_deepboost)
+test_model(model_blackboost)
+
+# file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
+# write.csv(df.result, file = file, row.names = FALSE)
 ```
