@@ -1071,7 +1071,7 @@ df.train.Part <- df.train
 
 ```{r}
 set.seed(96)
-data.partition <- createDataPartition(df.train.Part$Gravedad == 1, p = 0.70)
+data.partition <- createDataPartition(df.train.Part$Gravedad == 1, p = 0.50)
 training <- df.train[data.partition$Resample1,]
 testing <- df.train[-data.partition$Resample1,]
 
@@ -1080,6 +1080,8 @@ training %>% group_by(Gravedad) %>%
     mutate(percent = count/sum(count))
 
 # Total de casos -> 3475 (si) + 2917 (no) = 6392
+# Queremos que los NO correspondan a un 50% de la muestra -> Los NO deberían ser 3475 casos (incrementar en 558)
+
 # Queremos que los SI correspondan a un 73% de la muestra -> Los NO deberían ser 1285 casos
 # Queremos que los SI correspondan a un 70% de la muestra -> Los NO deberían ser 1489 casos
 # Queremos que los SI correspondan a un 65% de la muestra -> Los NO deberían ser 1871 casos
@@ -1104,6 +1106,12 @@ training.yes.amplified <- training.yes[indices_train,]
 training.yes <- rbind(training.yes, training.yes.amplified)
 training <- rbind(training.yes, training.no)
 
+# Up-sampling
+# indices_train = sample(rownames(training.no), 558, replace = TRUE)
+# training.no.amplified <- training.no[indices_train,]
+# training.no <- rbind(training.no, training.no.amplified)
+# training <- rbind(training.yes, training.no)
+
 training %>% group_by(Gravedad) %>%
   summarise(count = n()) %>%
   mutate(percent = count/sum(count)*100)
@@ -1122,11 +1130,13 @@ train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allow
 
 model_nnet <- train(Gravedad ~ ., data=training, trControl=train_control, method="nnet", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
 
+model_nnet <- train(Gravedad ~ ., data=training, trControl=train_control, method="nnet", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
 
+test_model(model_parRF)
 
 model_parRF <- train(Gravedad ~ ., data=training, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree=500, na.action = na.omit)
 model_ranger <- train(Gravedad ~ ., data=training, trControl=train_control,method="ranger", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
-model_RRF <- train(Gravedad ~ .,data=training,trControl=train_control,method="RRF", importance=T, preProcess=c('scale', 'center'),na.action = na.omit)
+model_RRF <- train(Gravedad ~ .,data=training,trControl=train_control,method="RRF", importance=T, preProcess=c('scale', 'center'),na.action = na.omit, weights = c(0.3, 0.7))
 
 
 
@@ -1184,6 +1194,8 @@ test_model <- function(model) {
 
 test_model(model_nnet)
 
+df.result <- data.frame(Id = 1:200, Prediction = predict(model_parRF, df.test))
+
 test_model(model_parRF)
 test_model(model_ranger)
 test_model(model_RRF)
@@ -1198,6 +1210,6 @@ test_model(model_LogitBoost)
 test_model(model_deepboost)
 test_model(model_blackboost)
 
-# file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
-# write.csv(df.result, file = file, row.names = FALSE)
+file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
+write.csv(df.result, file = file, row.names = FALSE)
 ```
