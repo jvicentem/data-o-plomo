@@ -1260,6 +1260,8 @@ length(which(med == 0.5))
 df.result <- data.frame(Id = 1:200, Prediction = ifelse(med >= 0.5,1,0))
 
 
+df.result <- read.csv(file = '/home/mountain/URJC/3-Datatons/17abril-URJC/data-o-plomo_LOCAL/results.csv')
+
 df.result %>% group_by(Prediction) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count)*100)

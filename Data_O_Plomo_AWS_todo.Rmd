@@ -26,12 +26,14 @@ library(doMC)
 library(DMwR)
 library(kernlab)
 library(e1071)
+library(fastAdaboost)
+library(randomForest)
 ```
 
 #Limpiamos los datos
 
 ```{r, echo=FALSE, include=FALSE,}
-df.train <- read.csv('./traindata.csv', na.strings = NA)
+df.train <- read.csv('./traindata.csv', na.strings = c("NaN"))
 df.test <- read.csv('./testdata.csv', na.strings = c("NaN"))
 ```
 
@@ -1052,6 +1054,16 @@ select_data <- function(df) {
     df <- df[,-match(c("Arboles_Metros_Calzada", "Colision_Vehiculo_Obstaculo_1", "Colision_Vehiculo_Obstaculo_2", "Atropello_1", "Atropello_2", "Vuelco_1", "Vuelco_2", "Salida_Sin_Colision", "Otro", "Visibilidad_Restringida_por", "Colision_Vehiculos_Marcha", "Salida_Con_Colision", "Lado_Salida", "Dia", "Dia_Semana", "Arcen_Pavimentado", "Circulacion", "Circulacion_Medidas_Especiales", "Inexperiencia_Conductor", "Tramo_Obras", "Otro_Factor", "Arboles", "Curvatura", "Peralte", "GPS_x", "GPS_y", "GPS_z", "IMD", "Zona", "Marcas_Viales", "Distraccion", "Hitos_Arista", "Tipo_Est", "Pendiente", "Curvatura", "Peralte", "Provincia", "Dia_Semana", "Carretera", "Anchura_Calzada", "Arcen", "Barrera_Seguridad", "Paneles_Direccionales", "Captafaros", "Otras_Circunstancias", "Aceras", "Alcohol_Drogas", "Estado_Condicion_Senalizacion", "Fuera_o_Interseccion", "Hora", "Hm", "Interseccion_Acondicionamiento", "Tipo_Via", "Numero_Accidente", "Cansancio_Sueno", "Enfermedad", "Estado_Condicion_Via", "Mal_Estado_Vehiculo", "Averia_Mecanica", "Meteorologia_Adversa", "Irrupcion_Animal", "Circular_Sentido_Contrario", "Sin_Opinion_Definida"),colnames(df))]
 }
 
+df.temp <- data.frame(Key = names(df.train), len = sapply(sapply(df.train, na.omit),length))
+df.temp %>% filter (len != 9141)
+
+
+select_data <- function(df) {
+    df <- df[,-match(c("Visibilidad_Restringida_por", "Arboles_Metros_Calzada", "Colision_Vehiculos_Marcha", "Visibilidad_Senalizacion_Vertical", "Colision_Vehiculos_Marcha", "Colision_Vehiculo_Obstaculo_1", "Colision_Vehiculo_Obstaculo_2", "Atropello_1", "Atropello_2", "Vuelco_1", "Vuelco_2", "Salida_Sin_Colision", "Salida_Con_Colision", "Lado_Salida", "Otro", "Tipo_Est"),colnames(df))]
+}
+
+
+
 df.train <- select_data(df.train)
 df.test <- select_data(df.test)
 ```
@@ -1059,62 +1071,10 @@ df.test <- select_data(df.test)
 # Creación y partición de datos en train y test
 
 ```{r}
-library(caret)
-
+library(data.table)
 # Preparación de df.train eliminando variables y NAs
 df.train <- df.train %>% select(-Id, -Timestamp, -N_Leves, -N_Graves, -N_Muertos)
-df.train <- df.train %>% na.omit()
 
-df.train.Part <- df.train
-```
-
-# Partición de los datos
-
-```{r}
-set.seed(96)
-data.partition <- createDataPartition(df.train.Part$Gravedad == 'Si', 0.70)
-training <- df.train[data.partition$Resample1,]
-testing <- df.train[-data.partition$Resample1,]
-
-# training %>% group_by(Gravedad) %>%
-#   summarise(count = n()) %>%
-#   mutate(percent = count/sum(count)*100)
-
-# Total de casos -> 2482 (si) + 2083 (no) = 4565
-# Queremos que los SI correspondan a un 73% de la muestra -> Los NO deberían ser 918 casos
-# Queremos que los SI correspondan a un 70% de la muestra -> Los NO deberían ser 1064 casos
-# Queremos que los SI correspondan a un 65% de la muestra -> Los NO deberían ser 1336 casos
-
-training.yes <- training %>% filter(Gravedad == 'Si')
-training.no <- training %>% filter(Gravedad == 'No')
-
-set.seed(97)
-indices_train = sample(rownames(training.no),1064)
-training.no.reduced <- training.no[indices_train,]
-
-training <- rbind(training.yes, training.no.reduced)
-
-# length(training.yes$Gravedad)
-# length(training.no$Gravedad)
-# length(training.no.reduced$Gravedad)
-# length(training.Part$Gravedad)
-
-training %>% group_by(Gravedad) %>%
-  summarise(count = n()) %>%
-  mutate(percent = count/sum(count)*100)
-```
-
-
-# Creación y partición de datos en train y test
-
-```{r}
-# No existen grandes correlaciones después de haber limpiado las variables...
-# findCorrelation(x = cor(df.train[sapply(df.train,is.numeric)]), names = TRUE)
-# corrplot(cor(x = df.train[sapply(df.train,is.numeric)]), diag = FALSE)
-
-# Preparación de df.train eliminando variables y NAs
-df.train <- df.train %>% select(-Id, -Timestamp, -N_Leves, -N_Graves, -N_Muertos)
-df.train <- df.train %>% na.omit()
 
 df.train.Part <- df.train
 ```
@@ -1130,6 +1090,8 @@ testing <- df.train[-data.partition$Resample1,]
 training %>% group_by(Gravedad) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count))
+
+
 
 # Total de casos -> 3475 (si) + 2917 (no) = 6392
 # Queremos que los SI correspondan a un 73% de la muestra -> Los NO deberían ser 1285 casos
@@ -1153,6 +1115,8 @@ set.seed(97)
 # SMOTE
 # perc.under por defecto añade 2 veces el número de casos que se añaden a perc.over, es decir, si AÑADIMOS 1,18 casos por caso a la clase minoritaria, a la mayoritaria se le añaden 2*1.18. En total quedan: clase minoritaria=clase minoritaria *2 // clase mayoritaria = clase mayoritaria*(2*1.18+1) 
 
+dim(training)
+
 # Training para modelo de NEGATIVOS
 training_neg <- SMOTE(form = Gravedad ~ ., data = training, perc.over = 218, perc.under = 100)
 
@@ -1167,6 +1131,10 @@ training %>% group_by(Gravedad) %>%
   summarise(count = n()) %>%
   mutate(percent = count/sum(count)*100)
 
+training_neg %>% group_by(Gravedad) %>%
+  summarise(count = n()) %>%
+  mutate(percent = count/sum(count)*100)
+
 training_pos %>% group_by(Gravedad) %>%
   summarise(count = n()) %>%
   mutate(percent = count/sum(count)*100)
@@ -1176,7 +1144,7 @@ training_pos %>% group_by(Gravedad) %>%
 
 ```{r}
 # Selección número de cores
-registerDoMC(cores = 8)
+registerDoMC(cores = 4)
 
 # Parámetros y generación de modelos
 # train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allowParallel = TRUE, sampling = 'smote')
@@ -1184,6 +1152,15 @@ train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allow
 
 # grid_nnet<- expand.grid(size =c(seq(10,30,3)),decay = c(seq(0.2,4,0.3),))
 # model_nnet <- train(Gravedad ~ ., data=training, trControl=train_control, method="nnet", importance=T, preProcess=c('scale', 'center'), na.action = na.omit, tuneGrid = grid_nnet)
+
+dim(training)
+
+model_parRF_neg <- train(Gravedad ~ ., data=training_neg, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree = 500)
+
+model_parRF_pos <- train(Gravedad ~ ., data=training_pos, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree=500)
+
+
+
 
 
 grid_parRF <- expand.grid(mtry = seq(5,20,3))
@@ -1199,6 +1176,11 @@ model_ranger
 
 grid_adaboost <- expand.grid(nIter = seq(600,1000,200), method = "ada")
 model_adaboost <- train(Gravedad ~ ., data=training, trControl=train_control, method="adaboost", importance=T, preProcess=c('scale', 'center'), tuneGrid = grid_adaboost, na.action = na.omit)
+
+model_adaboost <- train(Gravedad ~ ., data = training, trControl = train_control, method = "adaboost", linout = TRUE, importance=T, preProcess=c('scale', 'center'), nIter = 600, na.action = na.omit)
+
+summary(training)
+
 model_adaboost
 
 # model_AdaBoost.M1 <- train(Gravedad ~ .,data=training,trControl=train_control,method="AdaBoost.M1", importance=T, preProcess=c('scale', 'center'),weight=0.5, na.action = na.omit)
@@ -1215,7 +1197,7 @@ model_Radial
 # model_svmLinearWeights2 <- train(Gravedad ~ ., data=training, trControl=train_control, method="svmLinearWeights2", importance=T, preProcess=c('scale', 'center'), na.action = na.omit)
 # model_svmLinearWeights <- train(Gravedad ~ .,data=training,trControl=train_control,method="svmLinearWeights", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
 
-grid_LogitBoost <- expand.grid(niter = seq(600,1000,200))
+grid_LogitBoost <- expand.grid(nIter = seq(400,2000,200))
 model_LogitBoost <- train(Gravedad ~ .,data=training,trControl=train_control,method="LogitBoost", importance=T, preProcess=c('scale', 'center'), tuneGrid = grid_LogitBoost, na.action = na.omit)
 model_LogitBoost
 
@@ -1224,7 +1206,7 @@ model_LogitBoost
 # model_blackboost <- train(Gravedad ~ .,data=training,trControl=train_control,method="blackboost", importance=T, preProcess=c('scale', 'center'),weight=0,na.action = na.omit)
 
 # model$finalModel
-# 
+modelLookup('parRF') 
 # modelLookup('ada') # Falla por NA
 # modelLookup('pda') # Falla por NA
 # modelLookup('pda2') # Falla por NA
@@ -1261,9 +1243,17 @@ test_model <- function(model) {
     )
 }
 
+confusionMatrix(predict(model, testing), testing$Gravedad, positive="1")
+
+predict(model_parRF, df.test, type = "prob")
+
 test_model(model_nnet)
 
 test_model(model_parRF)
+
+test_model(model_parRF_pos)
+test_model(model_parRF_neg)
+
 test_model(model_ranger)
 test_model(model_RRF)
 
@@ -1280,3 +1270,103 @@ test_model(model_blackboost)
 # file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
 # write.csv(df.result, file = file, row.names = FALSE)
 ```
+
+# Cruzar predicciones de ambos modelos para testing con valores reales
+
+```{r}
+
+# Train
+
+pred_pos_tst <- predict(model_parRF_pos, testing, type = "prob")[2]
+pred_neg_tst <- predict(model_parRF_neg, testing, type = "prob")[1]
+
+pred_tst <- case_when(
+                (pred_pos_tst < 0.455) & (pred_neg_tst > 0.57)  ~ 0,  
+                (pred_pos_tst < 0.5)  & (pred_neg_tst > 0.80)   ~ 0,
+                (pred_neg_tst > 0.95)                           ~ 0,
+                                                        TRUE   ~ 1
+)
+
+pred_tst_44 <- ifelse((pred_pos_tst < 0.44) & (pred_neg_tst > 0.57),0,1)
+pred_tst_455 <- ifelse((pred_pos_tst < 0.455) & (pred_neg_tst > 0.57),0,1)
+
+confusionMatrix(pred_tst_44,testing$Gravedad, positive="1")
+confusionMatrix(pred_tst_455,testing$Gravedad, positive="1")
+
+confusionMatrix(predict(model_parRF_pos, testing), testing$Gravedad, positive="1")
+confusionMatrix(predict(model_parRF_neg, testing), testing$Gravedad, positive="1")
+
+
+
+df.predict_tst <- data.frame(Id = 1:2738,
+                         Pred_pos = pred_pos_tst,
+                         Pred_neg = pred_neg_tst,
+                         Predicted = pred_tst,
+                         Real = testing$Gravedad)
+
+names(df.predict_tst) <- c("Id", "Pred_pos", "Pred_neg", "Predicted", "Real")
+
+df.predict_tst %>% filter(Predicted != Real)
+
+# write.csv(df.csv[-1], '~/URJC/test.csv', row.names = FALSE)
+
+df.predict_tst %>% filter(Pred_pos < 0.6 & Pred_neg < 0.6)
+
+
+# Test
+
+pred_pos <- predict(model_parRF_pos, df.test, type = "prob")[2]
+pred_neg <- predict(model_parRF_neg, df.test, type = "prob")[1]
+
+pred_case <- case_when(
+                (pred_pos < 0.455) & (pred_neg > 0.57)  ~ 0,  
+                (pred_pos < 0.5)  & (pred_neg > 0.80)   ~ 0,
+                (pred_neg > 0.95)                           ~ 0,
+                                                        TRUE   ~ 1
+)
+
+pred_44 <- ifelse((pred_pos < 0.44)&(pred_neg > 0.57),0,1)
+pred_455 <- ifelse((pred_pos < 0.455)&(pred_neg > 0.57),0,1)
+
+df.result_case <- data.frame(Id = 1:200, Prediction = pred_case)
+df.result_44 <- data.frame(Id = 1:200, Prediction = pred_44)
+df.result_455 <- data.frame(Id = 1:200, Prediction = pred_455)
+
+names(df.result_case) <- c("Id","Prediction")
+names(df.result_44) <- c("Id","Prediction")
+names(df.result_455) <- c("Id","Prediction")
+
+df.result.74 <- read.csv('~/URJC/3-Datatons/17abril-URJC/data-o-plomo_LOCAL/results.csv')
+
+df.result_case %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result_44 %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result_455 %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result.compare <- data.frame(Id = 1:200, Clas_44 = df.result_44$Prediction, Clas_455 = df.result_455$Prediction, Clas_case = df.result_case$Prediction, Clas_74 = df.result.74$Prediction)
+
+
+df.result.compare %>% filter(Clas_case != Clas_74)
+
+
+
+df.predict <- data.frame(Id = 1:200,
+                         Pred_pos = pred_pos,
+                         Pred_neg = pred_neg,
+                         Predicted = pred)
+
+
+names(df.predict) <- c("Id", "Pred_pos", "Pred_neg", "Predicted")
+
+
+file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
+write.csv(df.result_44, file = file, row.names = FALSE)
+```
+
