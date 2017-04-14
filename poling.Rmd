@@ -867,11 +867,11 @@ df.result %>% group_by(Prediction) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count)*100)
 
-#Con training test al 07/03
+#Con training test al 70/30
 #No	59	29.5		
 #Si	141	70.5	
 
-#Con training test al 05/05
+#Con training test al 50/50
 #No	55	27.5		
 #Si	145	72.5	
 ```
@@ -905,11 +905,11 @@ df.result %>% group_by(Prediction) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count)*100)
 
-#Con training test al 07/03
+#Con training test al 70/30
 #No	60	30		
 #Si	140	70		
 
-#Con training test al 05/05
+#Con training test al 50/50
 #No	76	38		
 #Si	124	62	
 ```
@@ -918,7 +918,7 @@ df.result %>% group_by(Prediction) %>%
 
 ```{r}
 trControl <- trainControl(method = "cv", number = 10)
-data.partition <- createDataPartition(df.train$Gravedad, times = 1, p = 0.7)
+data.partition <- createDataPartition(df.train$Gravedad, times = 1)
 training <- df.train[data.partition$Resample1,]
 testing <- df.train[-data.partition$Resample1,]
 
@@ -942,13 +942,39 @@ df.result %>% group_by(Prediction) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count)*100)
 
-#Con training test al 07/03
+#Con training test al 70/30
 #No	66	33		
 #Si	134	67	
 
-#Con training test al 05/05
+#Con training test al 50/50
 #No	66	33		
 #Si	134	67	
+
+model3.1 <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl,
+                tuneGrid = expand.grid(mfinal = c(100,300,500), maxdepth = c(5,10,15))
+                )
+
+confusionMatrix(predict(model3.1, testing), testing$Gravedad, positive="Si") #Sale un accuracy del 0.9396
+
+# Generando valores para test de kaggle del modelo que sea
+predictions_list <- predict(model3.1, df.test)
+
+df.result <- data.frame(1:200,  predictions_list)
+names(df.result) <- c('Id', 'Prediction')
+df.result %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+#Con training test al 70/30
+#No	54	27		
+#Si	146	73	
+
+#Con training test al 50/50
+#No	65	32.5		
+#Si	135	67.5	
 ```
 
 ## Adabag con balanceo personalizado
@@ -981,11 +1007,192 @@ df.result %>% group_by(Prediction) %>%
 
 #write.csv(df.result, file = 'results.csv', row.names = FALSE)
 
-#Con training test al 07/03
+#Con training test al 70/30
 #No	4	2		
 #Si	196	98	
 
-#Con training test al 05/05
-#No	66	33		
-#Si	134	67	
+#Con training test al 50/50
+#No	4	2		
+#Si	196	98	
+
+#Con tunegrid
+model4.1 <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl,
+                tuneGrid = expand.grid(mfinal = c(100,300,500), maxdepth = c(5,10,15))
+                )
+
+confusionMatrix(predict(model4.1, testing), testing$Gravedad, positive="Si")
+
+# Generando valores para test de kaggle del modelo que sea
+predictions_list <- predict(model4.1, df.test)
+
+df.result <- data.frame(1:200,  predictions_list)
+names(df.result) <- c('Id', 'Prediction')
+df.result %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+#Con training test al 70/30
+#No	71	35.5		
+#Si	129	64.5	
+
+#Con training test al 50/50
+#No	71	35.5		
+#Si	129	64.5	
 ```
+
+## Adabag sin balanceo personalizado
+
+```{r}
+trControl <- trainControl(method = "cv", number = 10)
+data.partition <- createDataPartition(df.train$Gravedad, times = 1, p = 0.7)
+training <- df.train[data.partition$Resample1,]
+testing <- df.train[-data.partition$Resample1,]
+
+training <- na.omit(training)
+testing <- na.omit(testing)
+
+model5 <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl
+                )
+
+confusionMatrix(predict(model5, testing), testing$Gravedad, positive="Si")
+
+# Generando valores para test de kaggle del modelo que sea
+predictions_list <- predict(model5, df.test)
+
+df.result <- data.frame(1:200,  predictions_list)
+names(df.result) <- c('Id', 'Prediction')
+df.result %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+#Con training test al 70/30
+#No	59	29.5		
+#Si	141	70.5	
+
+#Con training test al 50/50
+#No	4	2		
+#Si	196	98	
+
+#Con tunegrid
+model5.1 <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl,
+                tuneGrid = expand.grid(mfinal = c(100,300,500), maxdepth = c(5,10,15))
+                )
+
+confusionMatrix(predict(model5.1, testing), testing$Gravedad, positive="Si")
+
+# Generando valores para test de kaggle del modelo que sea
+predictions_list <- predict(model5.1, df.test)
+
+df.result <- data.frame(1:200,  predictions_list)
+names(df.result) <- c('Id', 'Prediction')
+df.result %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+#Con training test al 70/30
+#No	64	32		
+#Si	136	68	
+
+#Con training test al 50/50
+#No	71	35.5		
+#Si	129	64.5	
+```
+
+# Intentamos hacer poling con los modelos elegidos
+
+```{r}
+trControl <- trainControl(method = "cv", number = 10, classProbs = TRUE)
+data.partition <- createDataPartition(df.trainCustom$Gravedad, times = 1, p = 0.7)
+training <- df.train[data.partition$Resample1,]
+testing <- df.train[-data.partition$Resample1,]
+
+training <- na.omit(training)
+testing <- na.omit(testing)
+
+#Para NO
+model4.1P <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl,
+                tuneGrid = expand.grid(mfinal = c(500), maxdepth = c(15))
+                )
+
+predictions_list4.1P <- predict(model4.1P, df.test, type="prob")
+
+#Para SI
+model4P <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "AdaBag", 
+                trControl = trControl
+                )
+
+predictions_list4P <- predict(model4P, df.test, type="prob")
+
+#Para ambos
+data.partition <- createDataPartition(df.train$Gravedad, times = 1, p = 0.7)
+training <- df.train[data.partition$Resample1,]
+testing <- df.train[-data.partition$Resample1,]
+
+training <- na.omit(training)
+testing <- na.omit(testing)
+
+model1P <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)), 
+                y = training$Gravedad, 
+                method = "ranger", 
+                trControl = trControl, 
+                num.trees = 500,
+                tuneGrid = expand.grid(mtry = c(1,2,3,4,5,15,20,25,30,36))
+                )
+
+predictions_list1P <- predict(model1P, df.test, type="prob")
+
+all_probs <- cbind(predictions_list4.1P, predictions_list4P, predictions_list1P)
+
+
+results <- data.frame(1:200, 1)
+names(results) <- c('Id', 'Prediction')
+
+for (i in 1:200) {
+  no_no <- all_probs[i,1]
+  no_yes <- all_probs[i,2]
+  yes_no <- all_probs[i,3]
+  yes_yes <- all_probs[i,4]
+  norm_no <- all_probs[i,5]
+  norm_yes <- all_probs[i,6]
+  
+  if ((yes_yes > 0.86 & no_yes > 0.65) | (no_yes > 0.6 & yes_yes > 0.8 & norm_yes > 0.75)) {
+    results[i, 2] <- 1
+  } else {
+    if ((no_no > 0.7 & yes_no > 0.6 & norm_no > 0.8) | (no_no > 0.6 & norm_no > 0.65)) {
+      results[i, 2] <- 0
+    } else { #Por defecto ponemos un 1
+      print(no_no)
+      print(yes_no)
+      print(norm_no)
+      print('-------------')
+      results[i, 2] <- 1
+    }
+  }
+}
+
+results$Prediction <- as.factor(results$Prediction) 
+results$Id <- as.factor(results$Id)
+
+summary(results)
+
+write.csv(results, file = 'results.csv', row.names = FALSE)
+
+# 14/4/2017 14:25 
+# No 9
+# Si 191
+```
+
