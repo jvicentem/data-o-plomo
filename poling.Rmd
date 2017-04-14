@@ -1198,10 +1198,10 @@ for (i in 1:200) {
   # }
   
   # Jugando con las probabilidades es muy a favor de los sí
-  if (( no_yes > 0.4 & yes_yes > 0.75) | (no_yes > 0.4 & yes_yes > 0.75 & norm_yes > 0.75)) {
+  if (yes_yes > 0.75 & norm_yes > 0.5) {
     results[i, 2] <- 1
   } else {
-    if (no_no > 0.6 & norm_no > 0.65) {
+    if (no_no > 0.6 & norm_no > 0.65) { #Puede ser interesante poner el norm_no a 0.6, incluso, además de eso, poner no_no a 0.5
       results[i, 2] <- 0
     } else { #Por defecto ponemos un 1
       print('-----YES-----')
@@ -1239,11 +1239,11 @@ data.partition <- createDataPartition(df.trainCustom$Gravedad, times = 1, p = 0.
 training <- df.train[data.partition$Resample1,]
 testing <- df.train[-data.partition$Resample1,]
 
-results_testing <- data.frame(1:4787, 1)
+results_testing <- data.frame(1:nrow(testing), 1)
 names(results_testing) <- c('Id', 'Prediction')
 all_probs_testing <- cbind(predict(model4.1P, testing, type="prob"), predict(model4P, testing, type="prob"), predict(model1P, testing, type="prob"))
 
-for (i in 1:4787) {
+for (i in 1:nrow(testing)) {
   no_no <- all_probs_testing[i,1]
   no_yes <- all_probs_testing[i,2]
   yes_no <- all_probs_testing[i,3]
@@ -1251,10 +1251,10 @@ for (i in 1:4787) {
   norm_no <- all_probs_testing[i,5]
   norm_yes <- all_probs_testing[i,6]
   
-  if ((no_yes > 0.75 & yes_yes > 0.75) | (no_yes > 0.6 & yes_yes > 0.8 & norm_yes > 0.75)) {
+  if (yes_yes > 0.75 & norm_yes > 0.5) {
     results_testing[i, 2] <- 1
   } else {
-    if (no_no > 0.6 & norm_no > 0.65) {
+    if (no_no > 0.6 & norm_no > 0.65) { #Puede ser interesante poner el norm_no a 0.6, incluso, además de eso, poner no_no a 0.5
       results_testing[i, 2] <- 0
     } else { #Por defecto ponemos un 1
       print('-----YES-----')
