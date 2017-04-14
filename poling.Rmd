@@ -1007,6 +1007,7 @@ df.result %>% group_by(Prediction) %>%
 
 #write.csv(df.result, file = 'results.csv', row.names = FALSE)
 
+# METIDO A KAGGLE
 #Con training test al 70/30
 #No	4	2		
 #Si	196	98	
@@ -1155,6 +1156,7 @@ model1P <- train(x = select(training, -c(Gravedad, N_Leves, N_Muertos, N_Graves)
 
 predictions_list1P <- predict(model1P, df.test, type="prob")
 
+#Haciendo el test de kaggle
 all_probs <- cbind(predictions_list4.1P, predictions_list4P, predictions_list1P)
 
 
@@ -1169,12 +1171,44 @@ for (i in 1:200) {
   norm_no <- all_probs[i,5]
   norm_yes <- all_probs[i,6]
   
-  if ((yes_yes > 0.86 & no_yes > 0.65) | (no_yes > 0.6 & yes_yes > 0.8 & norm_yes > 0.75)) {
+  # Con votos: sale equilibrado pero hay más no
+  # votes <- c(0,0,0)
+  # 
+  # if (no_yes > 0.4) {
+  #   votes[1] <- 1
+  # } 
+  # 
+  # if (yes_yes > 0.6) {
+  #   votes[2] <- 1
+  # }
+  # 
+  # if (norm_yes > 0.5) {
+  #   votes[3] <- 1
+  # }
+  # 
+  # results[i,2] <- round(mean(votes))
+  
+  #Con media: sale equilibrado
+  #mean_yes <- mean(c(no_yes, yes_yes, norm_yes))
+  #mean_no <- mean(c(no_no, yes_no, norm_no))
+  # if (mean_yes > 0.5) {
+  #   results[i, 2] <- 1
+  # } else {
+  #   results[i, 2] <- 0
+  # }
+  
+  # Jugando con las probabilidades es muy a favor de los sí
+  if (( no_yes > 0.4 & yes_yes > 0.75) | (no_yes > 0.4 & yes_yes > 0.75 & norm_yes > 0.75)) {
     results[i, 2] <- 1
   } else {
-    if ((no_no > 0.7 & yes_no > 0.6 & norm_no > 0.8) | (no_no > 0.6 & norm_no > 0.65)) {
+    if (no_no > 0.6 & norm_no > 0.65) {
       results[i, 2] <- 0
     } else { #Por defecto ponemos un 1
+      print('-----YES-----')
+      print(no_yes)
+      print(yes_yes)
+      print(norm_yes)
+      print('-----NO------')
       print(no_no)
       print(yes_no)
       print(norm_no)
@@ -1191,8 +1225,53 @@ summary(results)
 
 write.csv(results, file = 'results.csv', row.names = FALSE)
 
+# METIDO A KAGGLE
 # 14/4/2017 14:25 
 # No 9
 # Si 191
+# Accuracy: 0.76336
+
+
+
+
+#Con testing con balanceo personalizado
+data.partition <- createDataPartition(df.trainCustom$Gravedad, times = 1, p = 0.7)
+training <- df.train[data.partition$Resample1,]
+testing <- df.train[-data.partition$Resample1,]
+
+results_testing <- data.frame(1:4787, 1)
+names(results_testing) <- c('Id', 'Prediction')
+all_probs_testing <- cbind(predict(model4.1P, testing, type="prob"), predict(model4P, testing, type="prob"), predict(model1P, testing, type="prob"))
+
+for (i in 1:4787) {
+  no_no <- all_probs_testing[i,1]
+  no_yes <- all_probs_testing[i,2]
+  yes_no <- all_probs_testing[i,3]
+  yes_yes <- all_probs_testing[i,4]
+  norm_no <- all_probs_testing[i,5]
+  norm_yes <- all_probs_testing[i,6]
+  
+  if ((no_yes > 0.75 & yes_yes > 0.75) | (no_yes > 0.6 & yes_yes > 0.8 & norm_yes > 0.75)) {
+    results_testing[i, 2] <- 1
+  } else {
+    if (no_no > 0.6 & norm_no > 0.65) {
+      results_testing[i, 2] <- 0
+    } else { #Por defecto ponemos un 1
+      print('-----YES-----')
+      print(no_yes)
+      print(yes_yes)
+      print(norm_yes)      
+      print('-----NO------')
+      print(no_no)
+      print(yes_no)
+      print(norm_no)
+      print('-------------')
+      results_testing[i, 2] <- 1
+    }
+  }
+}
+
+confusionMatrix(   ifelse(results_testing[,2] == 1, 'Si', 'No'), testing$Grave, positive="Si")
+
 ```
 
