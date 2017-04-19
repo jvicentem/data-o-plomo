@@ -5,13 +5,6 @@ date: "8 de abril de 2017"
 output: html_document
 ---
 
----
-title: "DATATON URJC 2017"
-author: "Data O Plomo"
-date: "7 de abril de 2017"
-output: html_document
----
-
 ```{r import-libraries, message=FALSE, warning=FALSE}
 library(magrittr)
 library(RDIDQ)
@@ -1071,7 +1064,6 @@ df.test <- select_data(df.test)
 # Creación y partición de datos en train y test
 
 ```{r}
-library(data.table)
 # Preparación de df.train eliminando variables y NAs
 df.train <- df.train %>% select(-Id, -Timestamp, -N_Leves, -N_Graves, -N_Muertos)
 
@@ -1121,7 +1113,7 @@ dim(training)
 training_neg <- SMOTE(form = Gravedad ~ ., data = training, perc.over = 218, perc.under = 100)
 
 # Training para modelo de POSITIVOS
-training_pos <- SMOTE(form = Gravedad ~ ., data = training, perc.over = 100, perc.under = 300)
+training_pos <- SMOTE(form = Gravedad ~ ., data = training, perc.over = 100, perc.under = 800)
 # indices_train = sample(rownames(training.yes), 1942, replace = TRUE)
 # training.yes.amplified <- training.yes[indices_train,]
 # training.yes <- rbind(training.yes, training.yes.amplified)
@@ -1144,7 +1136,7 @@ training_pos %>% group_by(Gravedad) %>%
 
 ```{r}
 # Selección número de cores
-registerDoMC(cores = 4)
+registerDoMC(cores = 8)
 
 # Parámetros y generación de modelos
 # train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allowParallel = TRUE, sampling = 'smote')
@@ -1154,6 +1146,14 @@ train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allow
 # model_nnet <- train(Gravedad ~ ., data=training, trControl=train_control, method="nnet", importance=T, preProcess=c('scale', 'center'), na.action = na.omit, tuneGrid = grid_nnet)
 
 dim(training)
+
+
+grid_LogitBoost <- expand.grid(nIter = seq(400,2000,200))
+
+model_LogitBoost_neg <- train(Gravedad ~ .,data=training_neg,trControl=train_control,method="LogitBoost", importance=T, preProcess=c('scale', 'center'), tuneGrid = grid_LogitBoost, na.action = na.omit)
+
+model_LogitBoost_pos <- train(Gravedad ~ .,data=training_pos,trControl=train_control,method="LogitBoost", importance=T, preProcess=c('scale', 'center'), tuneGrid = grid_LogitBoost, na.action = na.omit)
+
 
 model_parRF_neg <- train(Gravedad ~ ., data=training_neg, trControl=train_control, method="parRF", importance=T, preProcess=c('scale', 'center'), ntree = 500)
 
@@ -1274,7 +1274,7 @@ test_model(model_blackboost)
 # Cruzar predicciones de ambos modelos para testing con valores reales
 
 ```{r}
-
+# RF
 # Train
 
 pred_pos_tst <- predict(model_parRF_pos, testing, type = "prob")[2]
@@ -1338,6 +1338,13 @@ names(df.result_455) <- c("Id","Prediction")
 
 df.result.74 <- read.csv('~/URJC/3-Datatons/17abril-URJC/data-o-plomo_LOCAL/results.csv')
 
+df.result.2model.up <- read.csv('~/URJC/3-Datatons/17abril-URJC/data-o-plomo/results/2017_04_11_12_21_results.csv')
+
+df.result.2model.up %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+
 df.result_case %>% group_by(Prediction) %>%
     summarise(count = n()) %>%
     mutate(percent = count/sum(count)*100)
@@ -1370,3 +1377,114 @@ file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
 write.csv(df.result_44, file = file, row.names = FALSE)
 ```
 
+```{r}
+# RF
+# Train
+
+pred_pos_tst <- predict(model_LogitBoost_pos, testing, type = "prob")[2]
+pred_neg_tst <- predict(model_LogitBoost_neg, testing, type = "prob")[1]
+
+pred_tst_case <- case_when(
+                (pred_pos_tst < 0.455) & (pred_neg_tst > 0.57)  ~ 0,  
+                (pred_pos_tst < 0.5)  & (pred_neg_tst > 0.80)   ~ 0,
+                (pred_neg_tst > 0.95)                           ~ 0,
+                                                        TRUE   ~ 1
+)
+
+pred_tst_44 <- ifelse((pred_pos_tst < 0.44) & (pred_neg_tst > 0.57),0,1)
+pred_tst_455 <- ifelse((pred_pos_tst < 0.455) & (pred_neg_tst > 0.57),0,1)
+
+confusionMatrix(pred_tst_case,testing$Gravedad, positive="1")
+confusionMatrix(pred_tst_44,testing$Gravedad, positive="1")
+confusionMatrix(pred_tst_455,testing$Gravedad, positive="1")
+
+confusionMatrix(predict(model_LogitBoost_pos, testing), testing$Gravedad, positive="1")
+confusionMatrix(predict(model_LogitBoost_neg, testing), testing$Gravedad, positive="1")
+
+
+
+df.predict_tst <- data.frame(Id = 1:2738,
+                         Pred_pos = pred_pos_tst,
+                         Pred_neg = pred_neg_tst,
+                         Predicted = pred_tst,
+                         Real = testing$Gravedad)
+
+names(df.predict_tst) <- c("Id", "Pred_pos", "Pred_neg", "Predicted", "Real")
+
+df.predict_tst %>% filter(Predicted != Real)
+
+# write.csv(df.csv[-1], '~/URJC/test.csv', row.names = FALSE)
+
+df.predict_tst %>% filter(Pred_pos < 0.6 & Pred_neg < 0.6)
+
+
+# Test
+
+pred_pos <- predict(model_LogitBoost_pos, df.test, type = "prob")[2]
+pred_neg <- predict(model_LogitBoost_neg, df.test, type = "prob")[1]
+
+pred_case <- case_when(
+                (pred_pos < 0.455) & (pred_neg > 0.57)  ~ 0,  
+                (pred_pos < 0.5)  & (pred_neg > 0.80)   ~ 0,
+                (pred_neg > 0.95)                           ~ 0,
+                                                        TRUE   ~ 1
+)
+
+pred_44 <- ifelse((pred_pos < 0.44)&(pred_neg > 0.57),0,1)
+pred_455 <- ifelse((pred_pos < 0.455)&(pred_neg > 0.57),0,1)
+
+df.result_case <- data.frame(Id = 1:200, Prediction = pred_case)
+df.result_44 <- data.frame(Id = 1:200, Prediction = pred_44)
+df.result_455 <- data.frame(Id = 1:200, Prediction = pred_455)
+
+names(df.result_case) <- c("Id","Prediction")
+names(df.result_44) <- c("Id","Prediction")
+names(df.result_455) <- c("Id","Prediction")
+
+df.result.74 <- read.csv('~/URJC/3-Datatons/17abril-URJC/data-o-plomo_LOCAL/results.csv')
+
+df.result_case %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result_44 %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result_455 %>% group_by(Prediction) %>%
+    summarise(count = n()) %>%
+    mutate(percent = count/sum(count)*100)
+
+df.result.compare <- data.frame(Id = 1:200, Clas_44 = df.result_44$Prediction, Clas_455 = df.result_455$Prediction, Clas_case = df.result_case$Prediction, Clas_74 = df.result.74$Prediction)
+
+
+df.result.compare %>% filter(Clas_case != Clas_74)
+
+
+
+df.predict <- data.frame(Id = 1:200,
+                         Pred_pos = pred_pos,
+                         Pred_neg = pred_neg,
+                         Predicted = pred)
+
+
+names(df.predict) <- c("Id", "Pred_pos", "Pred_neg", "Predicted")
+
+```
+
+```{r}
+df.mine <- read_csv("/home/mountain/Descargas/results.csv")
+df.jose <- read_csv("/home/mountain/Descargas/results.csv")
+df.comp <- data.frame(df.jose, Prediction_mine = df.mine[,2])
+names(df.comp) <- c("Id", "Prediction-J", "Prediction-Mine")
+
+df.comp %>% filter(`Prediction-J` != `Prediction-Mine`)
+
+confusionMatrix(df.mine$Prediction,df.jose$Prediction, positive = "1")
+
+df.res.1 <- data.frame(Id = 1:200, Prediction = rep(1,200))
+
+file <- format(Sys.time(), "results/%Y_%m_%d_%H_%M_results.csv")
+write.csv(df.result, file = file, row.names = FALSE)
+
+```
