@@ -1083,7 +1083,8 @@ training %>% group_by(Gravedad) %>%
 ```{r}
 # Selección número de cores
 library(doMC)
-registerDoMC(cores = 8)
+# registerDoMC(cores = 8)
+registerDoMC(cores = 4)
 
 # Parámetros y generación de modelos
 train_control <- trainControl(method="repeatedcv", number=10, repeats = 1, allowParallel = TRUE)
